@@ -14,13 +14,10 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: {
-        index: resolve(__dirname, 'src/index.ts'),
-        styles: resolve(__dirname, 'src/styles.ts')
-      },
+      entry: resolve(__dirname, 'src/index.ts'),
       name: 'SubscryptsReactSDK',
       formats: ['es', 'cjs'],
-      fileName: (format, entryName) => `${entryName}.${format === 'es' ? 'js' : 'cjs'}`
+      fileName: (format) => `index.${format === 'es' ? 'js' : 'cjs'}`
     },
     rollupOptions: {
       external: [
@@ -35,9 +32,7 @@ export default defineConfig({
           'react-dom': 'ReactDOM',
           ethers: 'ethers'
         },
-        preserveModules: true,
-        preserveModulesRoot: 'src',
-        exports: 'named'
+        assetFileNames: 'style.css'
       }
     },
     sourcemap: true,
