@@ -1,0 +1,468 @@
+/**
+ * Main stylesheet for @subscrypts/react-sdk
+ * Import this in your app: import '@subscrypts/react-sdk/styles';
+ */
+
+@import './tokens.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles for SDK components */
+.subscrypts-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Animation keyframes */
+@keyframes subscrypts-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.subscrypts-animate-spin {
+  animation: subscrypts-spin 1s linear infinite;
+}
+
+/* Button base styles */
+.subscrypts-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--subscrypts-font-family);
+  font-weight: 500;
+  border-radius: var(--subscrypts-border-radius);
+  transition: all var(--subscrypts-transition-base);
+  cursor: pointer;
+  outline: none;
+  border: none;
+}
+
+.subscrypts-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Button sizes */
+.subscrypts-btn-sm {
+  padding: var(--subscrypts-spacing-xs) var(--subscrypts-spacing-sm);
+  font-size: var(--subscrypts-font-size-sm);
+}
+
+.subscrypts-btn-md {
+  padding: var(--subscrypts-spacing-sm) var(--subscrypts-spacing-md);
+  font-size: var(--subscrypts-font-size-base);
+}
+
+.subscrypts-btn-lg {
+  padding: var(--subscrypts-spacing-md) var(--subscrypts-spacing-lg);
+  font-size: var(--subscrypts-font-size-lg);
+}
+
+/* Button variants */
+.subscrypts-btn-primary {
+  background-color: var(--subscrypts-color-primary);
+  color: white;
+}
+
+.subscrypts-btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+  box-shadow: var(--subscrypts-shadow-md);
+}
+
+.subscrypts-btn-secondary {
+  background-color: var(--subscrypts-color-secondary);
+  color: white;
+}
+
+.subscrypts-btn-secondary:hover:not(:disabled) {
+  opacity: 0.9;
+  box-shadow: var(--subscrypts-shadow-md);
+}
+
+.subscrypts-btn-outline {
+  background-color: transparent;
+  color: var(--subscrypts-color-primary);
+  border: 1px solid var(--subscrypts-color-primary);
+}
+
+.subscrypts-btn-outline:hover:not(:disabled) {
+  background-color: var(--subscrypts-color-primary);
+  color: white;
+}
+
+/* Utility classes */
+.subscrypts-flex {
+  display: flex;
+}
+
+.subscrypts-items-center {
+  align-items: center;
+}
+
+.subscrypts-justify-center {
+  justify-content: center;
+}
+
+.subscrypts-p-4 {
+  padding: var(--subscrypts-spacing-md);
+}
+
+.subscrypts-rounded-full {
+  border-radius: 9999px;
+}
+
+.subscrypts-h-8 {
+  height: 2rem;
+}
+
+.subscrypts-w-8 {
+  width: 2rem;
+}
+
+.subscrypts-border-b-2 {
+  border-bottom-width: 2px;
+}
+
+.subscrypts-border-brand-primary {
+  border-color: var(--subscrypts-color-primary);
+}
+
+/* Modal Styles */
+.subscrypts-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: var(--subscrypts-spacing-md);
+}
+
+.subscrypts-modal-content {
+  background-color: var(--subscrypts-color-background);
+  border-radius: var(--subscrypts-border-radius-lg);
+  box-shadow: var(--subscrypts-shadow-lg);
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.subscrypts-max-w-md {
+  max-width: 28rem;
+}
+
+.subscrypts-max-w-lg {
+  max-width: 32rem;
+}
+
+.subscrypts-max-w-2xl {
+  max-width: 42rem;
+}
+
+.subscrypts-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--subscrypts-spacing-lg);
+  border-bottom: 1px solid var(--subscrypts-color-border);
+}
+
+.subscrypts-modal-title {
+  font-size: var(--subscrypts-font-size-xl);
+  font-weight: 600;
+  color: var(--subscrypts-color-text-primary);
+  margin: 0;
+}
+
+.subscrypts-modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--subscrypts-color-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subscrypts-modal-close:hover {
+  color: var(--subscrypts-color-text-primary);
+}
+
+.subscrypts-modal-body {
+  padding: var(--subscrypts-spacing-lg);
+}
+
+/* Form Styles */
+.subscrypts-form-group {
+  margin-bottom: var(--subscrypts-spacing-lg);
+}
+
+.subscrypts-label {
+  display: block;
+  font-size: var(--subscrypts-font-size-sm);
+  font-weight: 500;
+  color: var(--subscrypts-color-text-primary);
+  margin-bottom: var(--subscrypts-spacing-sm);
+}
+
+.subscrypts-input {
+  width: 100%;
+  padding: var(--subscrypts-spacing-sm);
+  border: 1px solid var(--subscrypts-color-border);
+  border-radius: var(--subscrypts-border-radius);
+  font-size: var(--subscrypts-font-size-base);
+  color: var(--subscrypts-color-text-primary);
+  background-color: var(--subscrypts-color-background);
+  transition: border-color var(--subscrypts-transition-base);
+}
+
+.subscrypts-input:focus {
+  outline: none;
+  border-color: var(--subscrypts-color-primary);
+}
+
+.subscrypts-checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}
+
+.subscrypts-text-sm {
+  font-size: var(--subscrypts-font-size-sm);
+}
+
+.subscrypts-text-secondary {
+  color: var(--subscrypts-color-text-secondary);
+}
+
+.subscrypts-ml-2 {
+  margin-left: var(--subscrypts-spacing-sm);
+}
+
+.subscrypts-mt-2 {
+  margin-top: var(--subscrypts-spacing-sm);
+}
+
+.subscrypts-w-full {
+  width: 100%;
+}
+
+.subscrypts-text-center {
+  text-align: center;
+}
+
+/* Cycle Options */
+.subscrypts-cycle-options {
+  display: flex;
+  gap: var(--subscrypts-spacing-sm);
+  flex-wrap: wrap;
+}
+
+.subscrypts-cycle-option {
+  flex: 1;
+  min-width: 5rem;
+  padding: var(--subscrypts-spacing-sm);
+  border: 1px solid var(--subscrypts-color-border);
+  border-radius: var(--subscrypts-border-radius);
+  background-color: var(--subscrypts-color-background);
+  color: var(--subscrypts-color-text-primary);
+  cursor: pointer;
+  transition: all var(--subscrypts-transition-base);
+}
+
+.subscrypts-cycle-option:hover {
+  border-color: var(--subscrypts-color-primary);
+}
+
+.subscrypts-cycle-option-active {
+  border-color: var(--subscrypts-color-primary);
+  background-color: var(--subscrypts-color-primary);
+  color: white;
+}
+
+/* Payment Method Cards */
+.subscrypts-payment-methods {
+  display: flex;
+  gap: var(--subscrypts-spacing-md);
+  flex-wrap: wrap;
+}
+
+.subscrypts-payment-card {
+  flex: 1;
+  min-width: 12rem;
+  padding: var(--subscrypts-spacing-md);
+  border: 2px solid var(--subscrypts-color-border);
+  border-radius: var(--subscrypts-border-radius-lg);
+  background-color: var(--subscrypts-color-background);
+  cursor: pointer;
+  transition: all var(--subscrypts-transition-base);
+  text-align: left;
+}
+
+.subscrypts-payment-card:hover {
+  border-color: var(--subscrypts-color-primary);
+  box-shadow: var(--subscrypts-shadow);
+}
+
+.subscrypts-payment-card-active {
+  border-color: var(--subscrypts-color-primary);
+  background-color: var(--subscrypts-color-background-secondary);
+}
+
+.subscrypts-payment-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--subscrypts-spacing-sm);
+}
+
+.subscrypts-payment-card-title {
+  font-weight: 600;
+  color: var(--subscrypts-color-text-primary);
+}
+
+.subscrypts-payment-card-balance {
+  font-size: var(--subscrypts-font-size-sm);
+  color: var(--subscrypts-color-text-secondary);
+}
+
+.subscrypts-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  background-color: var(--subscrypts-color-secondary);
+  color: white;
+  font-size: var(--subscrypts-font-size-xs);
+  border-radius: var(--subscrypts-border-radius-sm);
+  font-weight: 500;
+}
+
+/* Form Actions */
+.subscrypts-form-actions {
+  display: flex;
+  gap: var(--subscrypts-spacing-sm);
+  justify-content: flex-end;
+  margin-top: var(--subscrypts-spacing-lg);
+}
+
+/* Transaction Status */
+.subscrypts-transaction-status {
+  text-align: center;
+  padding: var(--subscrypts-spacing-xl) var(--subscrypts-spacing-md);
+}
+
+.subscrypts-transaction-message {
+  font-size: var(--subscrypts-font-size-lg);
+  font-weight: 500;
+  color: var(--subscrypts-color-text-primary);
+  margin-top: var(--subscrypts-spacing-md);
+}
+
+.subscrypts-success-icon,
+.subscrypts-error-icon {
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  border-radius: 50%;
+}
+
+.subscrypts-success-icon {
+  background-color: var(--subscrypts-color-success);
+  color: white;
+}
+
+.subscrypts-error-icon {
+  background-color: var(--subscrypts-color-error);
+  color: white;
+}
+
+/* Info and Error Boxes */
+.subscrypts-error-box,
+.subscrypts-info-box {
+  padding: var(--subscrypts-spacing-md);
+  border-radius: var(--subscrypts-border-radius);
+  margin-top: var(--subscrypts-spacing-md);
+}
+
+.subscrypts-error-box {
+  background-color: #FEE2E2;
+  border: 1px solid var(--subscrypts-color-error);
+}
+
+.subscrypts-info-box {
+  background-color: var(--subscrypts-color-background-secondary);
+  border: 1px solid var(--subscrypts-color-border);
+}
+
+.subscrypts-error-title,
+.subscrypts-info-label {
+  font-weight: 600;
+  font-size: var(--subscrypts-font-size-sm);
+  margin-bottom: var(--subscrypts-spacing-xs);
+}
+
+.subscrypts-error-title {
+  color: var(--subscrypts-color-error);
+}
+
+.subscrypts-info-label {
+  color: var(--subscrypts-color-text-secondary);
+}
+
+.subscrypts-error-message,
+.subscrypts-info-value {
+  font-size: var(--subscrypts-font-size-sm);
+  margin: 0;
+}
+
+.subscrypts-error-message {
+  color: #991B1B;
+}
+
+.subscrypts-info-value {
+  color: var(--subscrypts-color-text-primary);
+  font-family: monospace;
+}
+
+/* Checkout Success */
+.subscrypts-checkout-success {
+  text-align: center;
+  padding: var(--subscrypts-spacing-xl);
+}
+
+.subscrypts-success-title {
+  font-size: var(--subscrypts-font-size-2xl);
+  font-weight: 600;
+  color: var(--subscrypts-color-text-primary);
+  margin: var(--subscrypts-spacing-md) 0 var(--subscrypts-spacing-sm);
+}
+
+.subscrypts-success-message {
+  color: var(--subscrypts-color-text-secondary);
+  margin-bottom: var(--subscrypts-spacing-md);
+}
+
+.subscrypts-success-id {
+  font-family: monospace;
+  font-size: var(--subscrypts-font-size-sm);
+  color: var(--subscrypts-color-text-secondary);
+  margin-bottom: var(--subscrypts-spacing-lg);
+}

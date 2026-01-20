@@ -1,0 +1,25 @@
+# Source files
+src
+examples
+docs
+
+# Config files
+.gitignore
+.eslintrc.js
+tsconfig.json
+vite.config.ts
+tailwind.config.js
+postcss.config.js
+vitest.config.ts
+
+# Development
+.vscode
+.idea
+*.log
+node_modules
+
+# Testing
+**/*.test.ts
+**/*.test.tsx
+**/__tests__
+coverage
