@@ -1,11 +1,16 @@
 /**
  * Token addresses for SUBS and USDC on Arbitrum One
+ *
+ * Note: Subscrypts uses a UUPS Diamond Facet architecture where the SUBS token
+ * and Subscrypts contract share the same proxy address. All token functionality
+ * is accessible through the main proxy contract.
  */
 
 /**
  * SUBS token address on Arbitrum One
+ * Uses the same proxy address as Subscrypts contract (UUPS Diamond Facet pattern)
  */
-export const SUBS_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000'; // TODO: Update with actual SUBS token address
+export const SUBS_TOKEN_ADDRESS = '0xE2E5409C4B4Be5b67C69Cc2C6507B0598D069Eac';
 
 /**
  * USDC token address on Arbitrum One
@@ -31,9 +36,6 @@ export const TOKEN_DECIMALS = {
 export function getSubsTokenAddress(chainId: number): string {
   if (chainId !== ARBITRUM_ONE_CHAIN_ID) {
     throw new Error(`SUBS token only available on Arbitrum One (chain ${ARBITRUM_ONE_CHAIN_ID})`);
-  }
-  if (SUBS_TOKEN_ADDRESS === '0x0000000000000000000000000000000000000000') {
-    throw new Error(`SUBS token address not configured`);
   }
   return SUBS_TOKEN_ADDRESS;
 }

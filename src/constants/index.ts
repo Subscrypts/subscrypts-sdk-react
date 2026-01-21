@@ -1,5 +1,14 @@
 /**
  * Constants for @subscrypts/react-sdk
+ *
+ * All critical addresses are pre-configured and hardcoded for Arbitrum One.
+ * Developers don't need to configure:
+ * - SUBS token address (uses Diamond Facet proxy)
+ * - USDC token address
+ * - Subscrypts contract address
+ * - Default RPC URL (https://arb1.arbitrum.io/rpc)
+ *
+ * Everything works out of the box - just wrap your app with SubscryptsProvider!
  */
 
 // Network configurations

@@ -1,9 +1,16 @@
 /**
  * Smart contract addresses
+ *
+ * Architecture: Subscrypts uses a UUPS Diamond Facet pattern
+ * The proxy address (0xE2E5409C4B4Be5b67C69Cc2C6507B0598D069Eac) provides:
+ * - Subscription management functions
+ * - SUBS token (ERC20) functions
+ * - All other protocol functionality
  */
 
 /**
- * Subscrypts contract address on Arbitrum One
+ * Subscrypts proxy contract address on Arbitrum One
+ * This address handles both subscription logic and SUBS token functionality
  */
 export const SUBSCRYPTS_CONTRACT_ADDRESS = '0xE2E5409C4B4Be5b67C69Cc2C6507B0598D069Eac';
 
