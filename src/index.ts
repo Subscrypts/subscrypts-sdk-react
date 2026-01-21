@@ -87,6 +87,7 @@ export {
   getSubscryptsContractAddress,
   getSubsTokenAddress,
   getUsdcTokenAddress,
+  PERMIT2_ADDRESS,
   TOKEN_DECIMALS,
   DEFAULTS
 } from './constants';
@@ -121,5 +122,12 @@ export {
   ValidationError
 } from './utils';
 
+// PERMIT2 utilities
+export {
+  generatePermit2Signature,
+  PERMIT2_DOMAIN,
+  PERMIT2_TYPES
+} from './utils/permit.utils';
+
 // Version
-export const VERSION = '1.0.1';
+export const VERSION = '1.0.3';

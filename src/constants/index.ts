@@ -29,6 +29,7 @@ export {
 export {
   SUBS_TOKEN_ADDRESS,
   USDC_TOKEN_ADDRESS,
+  PERMIT2_ADDRESS,
   TOKEN_DECIMALS,
   getSubsTokenAddress,
   getUsdcTokenAddress

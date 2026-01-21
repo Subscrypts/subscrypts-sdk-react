@@ -8,9 +8,10 @@ import { useState, useCallback } from 'react';
 import { useSubscrypts } from '../../context/SubscryptsContext';
 import { PaymentMethod } from '../../types';
 import { ContractService, TokenService } from '../../services';
-import { getSubscryptsContractAddress, TOKEN_DECIMALS, DEFAULTS } from '../../constants';
+import { getSubscryptsContractAddress, TOKEN_DECIMALS, DEFAULTS, PERMIT2_ADDRESS } from '../../constants';
 import { validatePlanId, validateCycleLimit } from '../../utils/validators';
 import { TransactionError, InsufficientBalanceError } from '../../utils/errors';
+import { generatePermit2Signature } from '../../utils/permit.utils';
 import { ZeroAddress } from 'ethers';
 
 /**
@@ -174,6 +175,7 @@ export function useSubscribe(): UseSubscribeReturn {
             'USDC'
           );
 
+          // Step 1: Approve PERMIT2 for USDC (not the contract directly)
           setTxState('approving');
 
           // Approve large amount for USDC (will be capped by contract)
@@ -182,7 +184,7 @@ export function useSubscribe(): UseSubscribeReturn {
           try {
             await usdcService.ensureAllowance(
               wallet.address,
-              subscryptsAddress,
+              PERMIT2_ADDRESS, // ✅ Approve PERMIT2, not contract
               largeUsdcApproval
             );
           } catch (err) {
@@ -194,10 +196,22 @@ export function useSubscribe(): UseSubscribeReturn {
             }
           }
 
-          setTxState('subscribing');
+          // Step 2: Generate deadline for permit (30 minutes from now)
+          const deadline = BigInt(Math.floor(Date.now() / 1000) + 1800);
 
-          // Pay subscription with USDC
-          const deadline = Math.floor(Date.now() / 1000) + DEFAULTS.TRANSACTION_DEADLINE_SECONDS;
+          // Step 3: Generate PERMIT2 signature
+          setTxState('approving'); // User needs to sign permit in wallet
+
+          const { signature, nonce } = await generatePermit2Signature(
+            signer,
+            usdcTokenContract.target as string, // USDC token address
+            largeUsdcApproval,
+            subscryptsAddress, // Spender is the Subscrypts contract
+            deadline
+          );
+
+          // Step 4: Call contract with valid signature
+          setTxState('subscribing');
 
           const result = await contractService.paySubscriptionWithUsdc({
             planId: BigInt(params.planId),
@@ -205,10 +219,10 @@ export function useSubscribe(): UseSubscribeReturn {
             remainingCycles: BigInt(params.cycleLimit),
             referral: params.referralAddress || ZeroAddress,
             feeTier: DEFAULTS.UNISWAP_FEE_TIER,
-            deadline: BigInt(deadline),
-            nonce: 0n,
-            permitDeadline: 0n,
-            signature: '0x',
+            deadline: deadline,
+            nonce: BigInt(nonce), // ✅ Valid nonce from signature generation
+            permitDeadline: deadline, // ✅ Valid deadline
+            signature: signature, // ✅ Valid EIP-712 signature
             maxUsdcIn6Cap: largeUsdcApproval
           });
 

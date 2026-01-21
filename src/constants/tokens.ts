@@ -18,6 +18,12 @@ export const SUBS_TOKEN_ADDRESS = '0xE2E5409C4B4Be5b67C69Cc2C6507B0598D069Eac';
 export const USDC_TOKEN_ADDRESS = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831';
 
 /**
+ * PERMIT2 universal router address (Uniswap)
+ * Used for safe, gas-efficient token approvals via EIP-712 signatures
+ */
+export const PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3';
+
+/**
  * Arbitrum One chain ID
  */
 const ARBITRUM_ONE_CHAIN_ID = 42161;
