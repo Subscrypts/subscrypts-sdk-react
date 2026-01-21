@@ -53,16 +53,16 @@ export interface PayWithUsdcResult {
  * Subscription data structure from contract
  */
 export interface ContractSubscription {
+  id: bigint;
+  merchantAddress: string;
   planId: bigint;
-  subscriber: string;
-  merchant: string;
-  currencyCode: string;
-  amount: bigint;
-  frequency: bigint; // Subscription duration in seconds
-  recurring: boolean;
+  subscriberAddress: string;
+  currencyCode: bigint;
+  subscriptionAmount: bigint;
+  paymentFrequency: bigint;
+  isRecurring: boolean;
   remainingCycles: bigint;
-  expiration: bigint; // Unix timestamp
-  attribute: string; // Custom metadata
+  customAttributes: string;
   lastPaymentDate: bigint;
   nextPaymentDate: bigint;
 }
@@ -72,9 +72,15 @@ export interface ContractSubscription {
  */
 export interface ContractPlan {
   id: bigint;
-  merchantId: string;
-  title: string;
-  cost: bigint;
-  duration: bigint; // Seconds
+  merchantAddress: string;
+  currencyCode: bigint;
+  subscriptionAmount: bigint;
+  paymentFrequency: bigint;
+  referralBonus: bigint;
+  commission: bigint;
+  description: string;
+  defaultAttributes: string;
+  verificationExpiryDate: bigint;
+  subscriberCount: bigint;
   isActive: boolean;
 }

@@ -15,8 +15,8 @@ export interface SubscryptsProviderProps {
   enableWalletManagement?: boolean;
   /** External wallet configuration (required if enableWalletManagement is false) */
   externalProvider?: ExternalWalletConfig;
-  /** Network to use: 'arbitrum' or 'arbitrum-sepolia' (default: 'arbitrum') */
-  network?: 'arbitrum' | 'arbitrum-sepolia';
+  /** Network to use: 'arbitrum' (default: 'arbitrum') */
+  network?: 'arbitrum';
   /** Custom RPC URL (optional) */
   rpcUrl?: string;
   /** Balance refresh interval in milliseconds (default: 30000) */
@@ -27,7 +27,6 @@ export interface SubscryptsProviderProps {
  * SubscriptionGuard props
  */
 export interface SubscriptionGuardProps {
-  merchantId: string;
   planId: string;
   /** URL to redirect to if subscription is inactive */
   fallbackUrl?: string;
@@ -43,7 +42,6 @@ export interface SubscriptionGuardProps {
  * SubscriptionCatalog props
  */
 export interface SubscriptionCatalogProps {
-  merchantId: string;
   /** Optional custom plans array (fetched from contract if not provided) */
   plans?: Plan[];
   /** Show referral input field (default: false) */

@@ -5,21 +5,21 @@
 // Network configurations
 export {
   ARBITRUM_ONE,
-  ARBITRUM_SEPOLIA,
   getNetworkConfig,
   isArbitrumNetwork
 } from './networks';
 
 // Contract addresses
 export {
-  SUBSCRYPTS_CONTRACT_ADDRESSES,
+  SUBSCRYPTS_CONTRACT_ADDRESS,
+  ARBITRUM_ONE_CHAIN_ID,
   getSubscryptsContractAddress
 } from './contracts';
 
 // Token addresses and decimals
 export {
-  SUBS_TOKEN_ADDRESSES,
-  USDC_TOKEN_ADDRESSES,
+  SUBS_TOKEN_ADDRESS,
+  USDC_TOKEN_ADDRESS,
   TOKEN_DECIMALS,
   getSubsTokenAddress,
   getUsdcTokenAddress

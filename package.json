@@ -1,6 +1,6 @@
 {
   "name": "@subscrypts/react-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Official React SDK for Subscrypts - Decentralized subscriptions on Arbitrum",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -90,7 +90,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/subscrypts/react-sdk"
+    "url": "git+https://github.com/subscrypts/react-sdk.git"
   },
   "bugs": {
     "url": "https://github.com/subscrypts/react-sdk/issues"

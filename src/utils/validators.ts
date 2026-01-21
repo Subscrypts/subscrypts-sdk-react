@@ -57,15 +57,6 @@ export function validatePlanId(planId: string): void {
 }
 
 /**
- * Validate merchant ID
- */
-export function validateMerchantId(merchantId: string): void {
-  if (!merchantId || merchantId.trim() === '') {
-    throw new ValidationError('merchantId', 'Merchant ID is required');
-  }
-}
-
-/**
  * Validate cycle limit
  */
 export function validateCycleLimit(cycles: number): void {

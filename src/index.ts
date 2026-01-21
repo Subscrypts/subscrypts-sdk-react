@@ -12,8 +12,7 @@
  *   return (
  *     <SubscryptsProvider enableWalletManagement={true}>
  *       <SubscriptionGuard
- *         merchantId="your-merchant-id"
- *         planId="premium-plan"
+ *         planId="1"
  *         fallbackUrl="/subscribe"
  *       >
  *         <PremiumContent />
@@ -83,7 +82,6 @@ export type {
 // Constants
 export {
   ARBITRUM_ONE,
-  ARBITRUM_SEPOLIA,
   getNetworkConfig,
   isArbitrumNetwork,
   getSubscryptsContractAddress,
@@ -111,7 +109,6 @@ export {
   validatePositiveNumber,
   validatePositiveBigInt,
   validatePlanId,
-  validateMerchantId,
   validateCycleLimit,
 
   // Errors
@@ -125,4 +122,4 @@ export {
 } from './utils';
 
 // Version
-export const VERSION = '1.0.0';
+export const VERSION = '1.0.1';

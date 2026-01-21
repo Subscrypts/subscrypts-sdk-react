@@ -3,22 +3,21 @@
  */
 
 /**
- * Subscrypts contract addresses by network
+ * Subscrypts contract address on Arbitrum One
  */
-export const SUBSCRYPTS_CONTRACT_ADDRESSES: Record<number, string> = {
-  // Arbitrum One
-  42161: '0xE2E5409C4B4Be5b67C69Cc2C6507B0598D069Eac',
-  // Arbitrum Sepolia (update with actual testnet address)
-  421614: '0xE2E5409C4B4Be5b67C69Cc2C6507B0598D069Eac' // TODO: Update with testnet address
-};
+export const SUBSCRYPTS_CONTRACT_ADDRESS = '0xE2E5409C4B4Be5b67C69Cc2C6507B0598D069Eac';
+
+/**
+ * Arbitrum One chain ID
+ */
+export const ARBITRUM_ONE_CHAIN_ID = 42161;
 
 /**
  * Get Subscrypts contract address for a specific chain
  */
 export function getSubscryptsContractAddress(chainId: number): string {
-  const address = SUBSCRYPTS_CONTRACT_ADDRESSES[chainId];
-  if (!address) {
-    throw new Error(`Subscrypts contract not deployed on chain ${chainId}`);
+  if (chainId !== ARBITRUM_ONE_CHAIN_ID) {
+    throw new Error(`Subscrypts contract only deployed on Arbitrum One (chain ${ARBITRUM_ONE_CHAIN_ID})`);
   }
-  return address;
+  return SUBSCRYPTS_CONTRACT_ADDRESS;
 }

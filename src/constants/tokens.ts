@@ -1,26 +1,21 @@
 /**
- * Token addresses for SUBS and USDC
+ * Token addresses for SUBS and USDC on Arbitrum One
  */
 
 /**
- * SUBS token addresses by network
+ * SUBS token address on Arbitrum One
  */
-export const SUBS_TOKEN_ADDRESSES: Record<number, string> = {
-  // Arbitrum One - SUBS is the native token on the Subscrypts contract
-  42161: '0x0000000000000000000000000000000000000000', // TODO: Update with actual SUBS token address
-  // Arbitrum Sepolia
-  421614: '0x0000000000000000000000000000000000000000' // TODO: Update with testnet address
-};
+export const SUBS_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000'; // TODO: Update with actual SUBS token address
 
 /**
- * USDC token addresses by network
+ * USDC token address on Arbitrum One
  */
-export const USDC_TOKEN_ADDRESSES: Record<number, string> = {
-  // Arbitrum One - Official USDC
-  42161: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
-  // Arbitrum Sepolia - USDC testnet
-  421614: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d' // TODO: Verify testnet USDC address
-};
+export const USDC_TOKEN_ADDRESS = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831';
+
+/**
+ * Arbitrum One chain ID
+ */
+const ARBITRUM_ONE_CHAIN_ID = 42161;
 
 /**
  * Token decimals
@@ -34,20 +29,21 @@ export const TOKEN_DECIMALS = {
  * Get SUBS token address for a specific chain
  */
 export function getSubsTokenAddress(chainId: number): string {
-  const address = SUBS_TOKEN_ADDRESSES[chainId];
-  if (!address || address === '0x0000000000000000000000000000000000000000') {
-    throw new Error(`SUBS token address not configured for chain ${chainId}`);
+  if (chainId !== ARBITRUM_ONE_CHAIN_ID) {
+    throw new Error(`SUBS token only available on Arbitrum One (chain ${ARBITRUM_ONE_CHAIN_ID})`);
   }
-  return address;
+  if (SUBS_TOKEN_ADDRESS === '0x0000000000000000000000000000000000000000') {
+    throw new Error(`SUBS token address not configured`);
+  }
+  return SUBS_TOKEN_ADDRESS;
 }
 
 /**
  * Get USDC token address for a specific chain
  */
 export function getUsdcTokenAddress(chainId: number): string {
-  const address = USDC_TOKEN_ADDRESSES[chainId];
-  if (!address) {
-    throw new Error(`USDC token not available on chain ${chainId}`);
+  if (chainId !== ARBITRUM_ONE_CHAIN_ID) {
+    throw new Error(`USDC token only available on Arbitrum One (chain ${ARBITRUM_ONE_CHAIN_ID})`);
   }
-  return address;
+  return USDC_TOKEN_ADDRESS;
 }

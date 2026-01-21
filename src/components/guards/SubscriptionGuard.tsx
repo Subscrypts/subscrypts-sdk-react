@@ -17,7 +17,6 @@ import { LoadingSpinner } from '../shared/LoadingSpinner';
  * ```tsx
  * // Basic usage with redirect
  * <SubscriptionGuard
- *   merchantId="merchant-123"
  *   planId="1"
  *   fallbackUrl="/subscribe"
  * >
@@ -26,7 +25,6 @@ import { LoadingSpinner } from '../shared/LoadingSpinner';
  *
  * // With custom loading UI
  * <SubscriptionGuard
- *   merchantId="merchant-123"
  *   planId="1"
  *   loadingComponent={<CustomSpinner />}
  *   onAccessDenied={() => analytics.track('access_denied')}
@@ -36,14 +34,13 @@ import { LoadingSpinner } from '../shared/LoadingSpinner';
  * ```
  */
 export function SubscriptionGuard({
-  merchantId,
   planId,
   fallbackUrl,
   loadingComponent,
   children,
   onAccessDenied
 }: SubscriptionGuardProps) {
-  const { status, isLoading } = useSubscriptionStatus(merchantId, planId);
+  const { status, isLoading } = useSubscriptionStatus(planId);
 
   /**
    * Handle access denial

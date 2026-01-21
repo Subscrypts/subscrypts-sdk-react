@@ -69,7 +69,7 @@ Drop-in React components that work out of the box - no blockchain expertise requ
 Complete control over UI with powerful, composable hooks.
 
 ```tsx
-const { status, isActive } = useSubscriptionStatus('merchant-id', 'plan-id');
+const { status, isActive } = useSubscriptionStatus('plan-id');
 ```
 
 ### 🔐 **Built-in Access Control**
@@ -162,7 +162,6 @@ export default App;
 **What did we just do?**
 - `SubscryptsProvider`: Makes subscription features available throughout your app
 - `enableWalletManagement={true}`: Enables built-in wallet connection (MetaMask, etc.)
-- `defaultNetwork={42161}`: Sets Arbitrum One as the blockchain network (use `421614` for testnet)
 - Import styles: Loads the pre-built CSS for all components
 
 ---
@@ -184,8 +183,7 @@ function MyApp() {
 
       {/* Only subscribers can see this */}
       <SubscriptionGuard
-        merchantId="your-merchant-id"
-        planId="premium-plan"
+        planId="1"
         fallbackUrl="/subscribe"
       >
         <div className="premium-content">
@@ -204,8 +202,8 @@ function MyApp() {
 - Users **with** an active subscription see the premium content
 - The SDK automatically checks the blockchain for subscription status
 
-**Where do I get `merchantId` and `planId`?**
-You'll receive these when you register as a merchant on [Subscrypts.com](https://subscrypts.com).
+**Where do I get `planId`?**
+You'll receive the plan ID when you create a subscription plan on the Subscrypts contract. This is the unique identifier for your subscription plan on the blockchain.
 
 ---
 
@@ -321,8 +319,7 @@ function PremiumArticle() {
 
       {/* Premium content */}
       <SubscriptionGuard
-        merchantId="blog-platform"
-        planId="premium-articles"
+        planId="1"
         fallbackUrl="/subscribe"
       >
         <div className="premium-section">
@@ -355,10 +352,7 @@ Show users their current subscription status:
 import { useSubscriptionStatus } from '@subscrypts/react-sdk';
 
 function SubscriptionBadge() {
-  const { status, isLoading } = useSubscriptionStatus(
-    'my-merchant-id',
-    'premium-plan'
-  );
+  const { status, isLoading } = useSubscriptionStatus('1');
 
   if (isLoading) {
     return <div>Checking subscription...</div>;
@@ -572,7 +566,7 @@ function PricingPage() {
 | Prop | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
 | `enableWalletManagement` | `boolean` | No | `false` | Enable built-in wallet connection |
-| `defaultNetwork` | `number` | No | `42161` | Arbitrum network (42161=mainnet, 421614=testnet) |
+| `defaultNetwork` | `number` | No | `42161` | Arbitrum network (42161=Arbitrum One mainnet) |
 | `externalProvider` | `Signer` | No | - | Use external wallet (Wagmi/RainbowKit) |
 | `children` | `ReactNode` | Yes | - | Your app components |
 
@@ -584,8 +578,7 @@ function PricingPage() {
 
 ```tsx
 <SubscriptionGuard
-  merchantId="your-merchant-id"
-  planId="premium-plan"
+  planId="1"
   fallbackUrl="/subscribe"
   loadingComponent={<Spinner />}
   onAccessDenied={() => console.log('Access denied!')}
@@ -598,7 +591,6 @@ function PricingPage() {
 
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
-| `merchantId` | `string` | Yes | Your merchant ID from Subscrypts |
 | `planId` | `string` | Yes | The plan ID to check access for |
 | `fallbackUrl` | `string` | No | Redirect URL when subscription is inactive |
 | `loadingComponent` | `ReactNode` | No | Custom loading indicator |
@@ -674,9 +666,8 @@ const [isOpen, setIsOpen] = useState(false);
 
 ```tsx
 const { status, isLoading, error, refetch } = useSubscriptionStatus(
-  'merchant-id',
-  'plan-id',
-  '0x...' // Optional: check different address
+  '1',      // Plan ID
+  '0x...'   // Optional: check different address
 );
 
 if (status?.isActive) {
@@ -950,20 +941,6 @@ const handleSubscribe = async () => {
 
 ---
 
-### Testing on Arbitrum Sepolia (Testnet)
-
-For development, use the testnet:
-
-```tsx
-<SubscryptsProvider defaultNetwork={421614}>
-  {/* Your app */}
-</SubscryptsProvider>
-```
-
-Get testnet ETH: [Arbitrum Sepolia Faucet](https://faucet.quicknode.com/arbitrum/sepolia)
-
----
-
 ## 🎨 Styling & Customization
 
 ### Using Default Styles
@@ -1185,19 +1162,19 @@ import { SubscryptsButton } from '@subscrypts/react-sdk';
 
 ---
 
-### Q: How do I get SUBS tokens for testing?
+### Q: How do I get SUBS tokens?
 
 **A:**
-1. Switch to Arbitrum Sepolia testnet
-2. Get testnet ETH from a faucet
-3. Contact Subscrypts support for testnet SUBS tokens
+1. SUBS tokens are available on Arbitrum One
+2. You can acquire SUBS through decentralized exchanges
+3. Contact Subscrypts support for more information about acquiring SUBS tokens
 
 ---
 
 ### Q: Is this production-ready?
 
-**A:** Yes! The SDK is fully tested and used in production applications. Make sure to:
-- Test thoroughly on testnet first
+**A:** Yes! The SDK is fully tested and used in production applications on Arbitrum One. Make sure to:
+- Test thoroughly before deploying
 - Audit your smart contract integrations
 - Have error handling in place
 - Monitor your subscriptions

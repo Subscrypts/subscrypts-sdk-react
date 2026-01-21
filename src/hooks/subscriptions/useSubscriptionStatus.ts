@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSubscrypts } from '../../context/SubscryptsContext';
 import { SubscriptionStatus } from '../../types';
 import { ContractService } from '../../services';
-import { validatePlanId, validateMerchantId } from '../../utils/validators';
+import { validatePlanId } from '../../utils/validators';
 
 /**
  * Hook return type
@@ -28,13 +28,12 @@ export interface UseSubscriptionStatusReturn {
 /**
  * Check subscription status for a specific plan
  *
- * @param merchantId - Merchant ID (for future multi-tenant support)
  * @param planId - Plan ID to check
  * @param subscriber - Optional subscriber address (defaults to connected wallet)
  *
  * @example
  * ```tsx
- * const { status, isLoading, error } = useSubscriptionStatus('merchant-123', '1');
+ * const { status, isLoading, error } = useSubscriptionStatus('1');
  *
  * if (isLoading) return <Spinner />;
  * if (error) return <Error message={error.message} />;
@@ -44,7 +43,6 @@ export interface UseSubscriptionStatusReturn {
  * ```
  */
 export function useSubscriptionStatus(
-  merchantId: string,
   planId: string,
   subscriber?: string
 ): UseSubscriptionStatusReturn {
@@ -63,7 +61,6 @@ export function useSubscriptionStatus(
   const fetchStatus = useCallback(async () => {
     // Validation
     try {
-      validateMerchantId(merchantId);
       validatePlanId(planId);
     } catch (validationError) {
       setError(validationError as Error);
@@ -114,7 +111,7 @@ export function useSubscriptionStatus(
       setStatus({
         isActive,
         expirationDate: new Date(Number(subscription.nextPaymentDate) * 1000),
-        isAutoRenewing: subscription.recurring,
+        isAutoRenewing: subscription.isRecurring,
         remainingCycles: Number(subscription.remainingCycles),
         subscriptionId: subscription.planId.toString()
       });
@@ -125,7 +122,7 @@ export function useSubscriptionStatus(
       setIsLoading(false);
       setStatus(null);
     }
-  }, [subscryptsContract, planId, addressToCheck, merchantId]);
+  }, [subscryptsContract, planId, addressToCheck]);
 
   /**
    * Fetch on mount and when dependencies change

@@ -23,33 +23,34 @@ export interface SubscriptionStatus {
  */
 export interface Subscription {
   id: string;
+  merchantAddress: string; // From blockchain
   planId: string;
   subscriber: string;
-  merchantId: string;
-  isActive: boolean;
-  expirationDate: Date;
+  currencyCode: bigint;
+  subscriptionAmount: bigint;
+  paymentFrequency: bigint;
   isAutoRenewing: boolean;
   remainingCycles: number;
-  attribute: string;
-  amount: bigint;
-  frequency: number; // Duration in seconds
+  customAttributes: string;
   lastPaymentDate: Date;
   nextPaymentDate: Date;
-  createdAt: Date;
 }
 
 /**
  * Subscription plan information
  */
 export interface Plan {
-  id: string;
-  merchantId: string;
-  title: string;
-  description?: string;
-  cost: bigint;
-  costType: 'FIXED' | 'FLEX';
-  duration: number; // Seconds
-  role: string;
+  id: bigint;
+  merchantAddress: string; // From blockchain
+  currencyCode: bigint;
+  subscriptionAmount: bigint;
+  paymentFrequency: bigint;
+  referralBonus: bigint;
+  commission: bigint;
+  description: string;
+  defaultAttributes: string;
+  verificationExpiryDate: bigint;
+  subscriberCount: bigint;
   isActive: boolean;
 }
 

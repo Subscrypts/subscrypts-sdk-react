@@ -45,20 +45,7 @@ export class ContractService {
         return null;
       }
 
-      return {
-        planId: subscription.planId,
-        subscriber: subscription.subscriberAddress,
-        merchant: subscription.merchantAddress,
-        currencyCode: subscription.currencyCode.toString(),
-        amount: subscription.subscriptionAmount,
-        frequency: subscription.paymentFrequency,
-        recurring: subscription.isRecurring,
-        remainingCycles: subscription.remainingCycles,
-        expiration: subscription.nextPaymentDate,
-        attribute: subscription.customAttributes,
-        lastPaymentDate: subscription.lastPaymentDate,
-        nextPaymentDate: subscription.nextPaymentDate
-      };
+      return subscription;
     } catch (error) {
       throw new ContractError(
         `Failed to fetch subscription for plan ${planId}`,

@@ -202,9 +202,10 @@ export function SubscryptsProvider({
    */
   const switchNetwork = useCallback(
     async (chainId: number) => {
-      const targetNetwork = chainId === 42161
-        ? getNetworkConfig('arbitrum')
-        : getNetworkConfig('arbitrum-sepolia');
+      if (chainId !== 42161) {
+        throw new Error('Only Arbitrum One (chain ID 42161) is supported');
+      }
+      const targetNetwork = getNetworkConfig('arbitrum');
 
       await walletService.switchNetwork(targetNetwork);
 

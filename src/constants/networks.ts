@@ -20,30 +20,15 @@ export const ARBITRUM_ONE: NetworkConfig = {
 };
 
 /**
- * Arbitrum Sepolia (Testnet) configuration
- */
-export const ARBITRUM_SEPOLIA: NetworkConfig = {
-  chainId: 421614,
-  name: 'Arbitrum Sepolia',
-  rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc',
-  blockExplorer: 'https://sepolia.arbiscan.io',
-  nativeCurrency: {
-    name: 'Sepolia Ether',
-    symbol: 'ETH',
-    decimals: 18
-  }
-};
-
-/**
  * Get network config by name
  */
-export function getNetworkConfig(network: 'arbitrum' | 'arbitrum-sepolia'): NetworkConfig {
-  return network === 'arbitrum' ? ARBITRUM_ONE : ARBITRUM_SEPOLIA;
+export function getNetworkConfig(_network: 'arbitrum'): NetworkConfig {
+  return ARBITRUM_ONE;
 }
 
 /**
  * Check if a chain ID is Arbitrum
  */
 export function isArbitrumNetwork(chainId: number): boolean {
-  return chainId === ARBITRUM_ONE.chainId || chainId === ARBITRUM_SEPOLIA.chainId;
+  return chainId === ARBITRUM_ONE.chainId;
 }
