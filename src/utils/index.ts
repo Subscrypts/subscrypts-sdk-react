@@ -5,4 +5,4 @@
 export * from './errors';
 export * from './validators';
 export * from './formatters';
-export * from './abi';
+export * from './subscryptsABI';

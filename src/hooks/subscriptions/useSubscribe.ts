@@ -8,11 +8,11 @@ import { useState, useCallback } from 'react';
 import { useSubscrypts } from '../../context/SubscryptsContext';
 import { PaymentMethod } from '../../types';
 import { ContractService, TokenService } from '../../services';
-import { getSubscryptsContractAddress, TOKEN_DECIMALS, DEFAULTS, PERMIT2_ADDRESS, DEX_QUOTER_ADDRESS } from '../../constants';
+import { getSubscryptsContractAddress, DECIMALS, DEFAULTS, PERMIT2_ADDRESS, DEX_QUOTER_ADDRESS, USDC_ADDRESS } from '../../constants';
 import { validatePlanId, validateCycleLimit } from '../../utils/validators';
 import { TransactionError, InsufficientBalanceError, ContractError } from '../../utils/errors';
 import { generatePermit2Signature } from '../../utils/permit.utils';
-import { DEX_QUOTER_ABI } from '../../utils/abi';
+import { DEX_QUOTER_ABI } from '../../utils/subscryptsABI';
 import { ZeroAddress, Contract } from 'ethers';
 
 /**
@@ -118,7 +118,7 @@ export function useSubscribe(): UseSubscribeReturn {
           const subsService = new TokenService(
             subsTokenContract.target as string,
             signer,
-            TOKEN_DECIMALS.SUBS,
+            DECIMALS.SUBS,
             'SUBS'
           );
 
@@ -172,7 +172,7 @@ export function useSubscribe(): UseSubscribeReturn {
           const usdcService = new TokenService(
             usdcTokenContract.target as string,
             signer,
-            TOKEN_DECIMALS.USDC,
+            DECIMALS.USDC,
             'USDC'
           );
 
@@ -185,7 +185,7 @@ export function useSubscribe(): UseSubscribeReturn {
           }
 
           // Fetch plan from contract to get required SUBS amount
-          const plan = await subscryptsContract.getplan(BigInt(params.planId));
+          const plan = await subscryptsContract.getPlan(BigInt(params.planId));
 
           // Calculate required SUBS (handle both SUBS and USD-denominated plans)
           let requiredSubs18 = plan.subscriptionAmount;
@@ -198,15 +198,18 @@ export function useSubscribe(): UseSubscribeReturn {
             requiredSubs18 = conversion.outputSUBS18;
           }
 
-          // Quote USDC needed from Uniswap Quoter
+          // Quote USDC needed from Uniswap QuoterV2
           const quoter = new Contract(DEX_QUOTER_ADDRESS, DEX_QUOTER_ABI, provider);
-          const usdcNeeded = await quoter.quoteExactOutputSingle.staticCall(
-            usdcTokenContract.target as string, // USDC address (tokenIn)
-            subscryptsAddress,                  // SUBS address (tokenOut)
-            DEFAULTS.UNISWAP_FEE_TIER,         // 3000 (0.3%)
-            requiredSubs18,                     // Exact SUBS output we need
-            0                                   // No price limit
-          );
+          const quoteResult = await quoter.quoteExactOutputSingle.staticCall({
+            tokenIn: USDC_ADDRESS,
+            tokenOut: subscryptsAddress,
+            amount: requiredSubs18,
+            fee: DEFAULTS.UNISWAP_FEE_TIER,
+            sqrtPriceLimitX96: 0n
+          });
+
+          // Extract amountIn from tuple result (QuoterV2 returns [amountIn, sqrtPriceX96After, initializedTicksCrossed, gasEstimate])
+          const usdcNeeded = quoteResult[0];
 
           // Add 0.5% buffer for price slippage
           const maxUsdcIn = (usdcNeeded * 10050n) / 10000n;

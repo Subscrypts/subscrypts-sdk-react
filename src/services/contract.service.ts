@@ -10,7 +10,7 @@ import {
   SubscriptionCreateResult,
   PayWithUsdcResult
 } from '../types';
-import { SUBSCRYPTS_ABI } from '../utils/abi';
+import { SUBSCRYPTS_ABI } from '../utils/subscryptsABI';
 import { ContractError } from '../utils/errors';
 
 /**

@@ -3,7 +3,7 @@
  */
 
 import { Contract, Signer } from 'ethers';
-import { ERC20_ABI } from '../utils/abi';
+import { ERC20_ABI } from '../utils/subscryptsABI';
 import { ContractError, InsufficientBalanceError } from '../utils/errors';
 
 /**

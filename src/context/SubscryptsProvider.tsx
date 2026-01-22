@@ -14,7 +14,7 @@ import {
   getUsdcTokenAddress,
   DEFAULTS
 } from '../constants';
-import { SUBSCRYPTS_ABI } from '../utils/abi';
+import { SUBSCRYPTS_ABI } from '../utils/subscryptsABI';
 import { WalletError } from '../utils/errors';
 
 /**

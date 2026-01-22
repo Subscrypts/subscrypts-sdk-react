@@ -1,49 +1,62 @@
 /**
  * Constants for @subscrypts/react-sdk
  *
- * All critical addresses are pre-configured and hardcoded for Arbitrum One.
- * Developers don't need to configure:
- * - SUBS token address (uses Diamond Facet proxy)
- * - USDC token address
- * - Subscrypts contract address
- * - Default RPC URL (https://arb1.arbitrum.io/rpc)
- *
- * Everything works out of the box - just wrap your app with SubscryptsProvider!
+ * All configuration is centralized in blockchain.ts
  */
 
-// Network configurations
+// Re-export everything from central blockchain config
 export {
-  ARBITRUM_ONE,
-  getNetworkConfig,
-  isArbitrumNetwork
-} from './networks';
+  // Network
+  CHAIN_ID,
+  CHAIN_NAME,
+  RPC_URLS,
+  DEFAULT_RPC_URL,
+  BLOCK_EXPLORER,
+  NETWORK_CONFIG,
 
-// Contract addresses
-export {
-  SUBSCRYPTS_CONTRACT_ADDRESS,
-  ARBITRUM_ONE_CHAIN_ID,
-  DEX_QUOTER_ADDRESS,
-  getSubscryptsContractAddress
-} from './contracts';
-
-// Token addresses and decimals
-export {
+  // Subscrypts
+  SUBSCRYPTS_ADDRESS,
   SUBS_TOKEN_ADDRESS,
-  USDC_TOKEN_ADDRESS,
-  PERMIT2_ADDRESS,
-  TOKEN_DECIMALS,
-  getSubsTokenAddress,
-  getUsdcTokenAddress
-} from './tokens';
 
-/**
- * Default configuration values
- */
-export const DEFAULTS = {
-  NETWORK: 'arbitrum' as const,
-  BALANCE_REFRESH_INTERVAL: 30000, // 30 seconds
-  SUBSCRIPTION_STATUS_CACHE_TIME: 30000, // 30 seconds
-  DEFAULT_CYCLE_LIMIT: 12,
-  UNISWAP_FEE_TIER: 3000, // 0.3%
-  TRANSACTION_DEADLINE_SECONDS: 300 // 5 minutes
-} as const;
+  // Tokens
+  USDC_ADDRESS,
+  DECIMALS,
+
+  // DEX / Uniswap
+  DEX_FACTORY_ADDRESS,
+  DEX_QUOTER_ADDRESS,
+  DEX_ROUTER_ADDRESS,
+  DEX_POSITION_MANAGER_ADDRESS,
+  DEX_PAIR_ADDRESS,
+  UNISWAP_FEE_TIER,
+
+  // PERMIT2
+  PERMIT2_ADDRESS,
+
+  // Defaults
+  DEFAULTS,
+
+  // Helpers
+  isArbitrumNetwork,
+  getSubscryptsAddress
+} from './blockchain';
+
+// Legacy aliases for backwards compatibility
+export { NETWORK_CONFIG as ARBITRUM_ONE } from './blockchain';
+export { SUBSCRYPTS_ADDRESS as SUBSCRYPTS_CONTRACT_ADDRESS } from './blockchain';
+export { CHAIN_ID as ARBITRUM_ONE_CHAIN_ID } from './blockchain';
+export { DECIMALS as TOKEN_DECIMALS } from './blockchain';
+
+// Legacy helper functions
+import { NETWORK_CONFIG, CHAIN_ID, SUBS_TOKEN_ADDRESS, USDC_ADDRESS, getSubscryptsAddress } from './blockchain';
+
+export const getNetworkConfig = (_network?: 'arbitrum') => NETWORK_CONFIG;
+export const getSubscryptsContractAddress = getSubscryptsAddress;
+export const getSubsTokenAddress = (chainId: number): string => {
+  if (chainId !== CHAIN_ID) throw new Error(`Only Arbitrum One (chain ${CHAIN_ID}) supported`);
+  return SUBS_TOKEN_ADDRESS;
+};
+export const getUsdcTokenAddress = (chainId: number): string => {
+  if (chainId !== CHAIN_ID) throw new Error(`Only Arbitrum One (chain ${CHAIN_ID}) supported`);
+  return USDC_ADDRESS;
+};

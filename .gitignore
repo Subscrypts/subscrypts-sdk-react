@@ -37,3 +37,8 @@ lerna-debug.log*
 *.local
 .cache
 .temp
+
+# Dev
+.claude
+claude-information
+

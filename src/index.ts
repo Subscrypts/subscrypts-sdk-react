@@ -131,7 +131,7 @@ export {
 } from './utils/permit.utils';
 
 // ABIs
-export { DEX_QUOTER_ABI } from './utils/abi';
+export { DEX_QUOTER_ABI } from './utils/subscryptsABI';
 
 // Version
-export const VERSION = '1.0.4';
+export const VERSION = '1.0.5';
