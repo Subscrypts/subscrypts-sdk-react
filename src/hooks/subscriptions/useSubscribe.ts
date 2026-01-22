@@ -8,11 +8,12 @@ import { useState, useCallback } from 'react';
 import { useSubscrypts } from '../../context/SubscryptsContext';
 import { PaymentMethod } from '../../types';
 import { ContractService, TokenService } from '../../services';
-import { getSubscryptsContractAddress, TOKEN_DECIMALS, DEFAULTS, PERMIT2_ADDRESS } from '../../constants';
+import { getSubscryptsContractAddress, TOKEN_DECIMALS, DEFAULTS, PERMIT2_ADDRESS, DEX_QUOTER_ADDRESS } from '../../constants';
 import { validatePlanId, validateCycleLimit } from '../../utils/validators';
-import { TransactionError, InsufficientBalanceError } from '../../utils/errors';
+import { TransactionError, InsufficientBalanceError, ContractError } from '../../utils/errors';
 import { generatePermit2Signature } from '../../utils/permit.utils';
-import { ZeroAddress } from 'ethers';
+import { DEX_QUOTER_ABI } from '../../utils/abi';
+import { ZeroAddress, Contract } from 'ethers';
 
 /**
  * Subscription parameters
@@ -167,7 +168,7 @@ export function useSubscribe(): UseSubscribeReturn {
           return subId;
 
         } else {
-          // USDC payment flow
+          // USDC payment flow with calculated amount
           const usdcService = new TokenService(
             usdcTokenContract.target as string,
             signer,
@@ -175,17 +176,47 @@ export function useSubscribe(): UseSubscribeReturn {
             'USDC'
           );
 
-          // Step 1: Approve PERMIT2 for USDC (not the contract directly)
+          // Step 1: Calculate actual USDC needed via Uniswap Quoter
           setTxState('approving');
 
-          // Approve large amount for USDC (will be capped by contract)
-          const largeUsdcApproval = BigInt('1000000000000'); // 1M USDC (6 decimals)
+          const provider = signer.provider;
+          if (!provider) {
+            throw new ContractError('Provider not available');
+          }
 
+          // Fetch plan from contract to get required SUBS amount
+          const plan = await subscryptsContract.getplan(BigInt(params.planId));
+
+          // Calculate required SUBS (handle both SUBS and USD-denominated plans)
+          let requiredSubs18 = plan.subscriptionAmount;
+
+          if (Number(plan.currencyCode) === 1) {
+            // USD-denominated plan: convert to SUBS at current price
+            const conversion = await subscryptsContract.convertOtherCurrencyToToken(
+              plan.subscriptionAmount
+            );
+            requiredSubs18 = conversion.outputSUBS18;
+          }
+
+          // Quote USDC needed from Uniswap Quoter
+          const quoter = new Contract(DEX_QUOTER_ADDRESS, DEX_QUOTER_ABI, provider);
+          const usdcNeeded = await quoter.quoteExactOutputSingle.staticCall(
+            usdcTokenContract.target as string, // USDC address (tokenIn)
+            subscryptsAddress,                  // SUBS address (tokenOut)
+            DEFAULTS.UNISWAP_FEE_TIER,         // 3000 (0.3%)
+            requiredSubs18,                     // Exact SUBS output we need
+            0                                   // No price limit
+          );
+
+          // Add 0.5% buffer for price slippage
+          const maxUsdcIn = (usdcNeeded * 10050n) / 10000n;
+
+          // Step 2: Approve PERMIT2 for calculated USDC amount
           try {
             await usdcService.ensureAllowance(
               wallet.address,
-              PERMIT2_ADDRESS, // ✅ Approve PERMIT2, not contract
-              largeUsdcApproval
+              PERMIT2_ADDRESS,
+              maxUsdcIn
             );
           } catch (err) {
             if (err instanceof InsufficientBalanceError) {
@@ -196,21 +227,21 @@ export function useSubscribe(): UseSubscribeReturn {
             }
           }
 
-          // Step 2: Generate deadline for permit (30 minutes from now)
+          // Step 3: Generate deadline for permit (30 minutes from now)
           const deadline = BigInt(Math.floor(Date.now() / 1000) + 1800);
 
-          // Step 3: Generate PERMIT2 signature
-          setTxState('approving'); // User needs to sign permit in wallet
+          // Step 4: Generate PERMIT2 signature with calculated amount
+          setTxState('approving');
 
           const { signature, nonce } = await generatePermit2Signature(
             signer,
-            usdcTokenContract.target as string, // USDC token address
-            largeUsdcApproval,
-            subscryptsAddress, // Spender is the Subscrypts contract
+            usdcTokenContract.target as string,
+            maxUsdcIn,
+            subscryptsAddress,
             deadline
           );
 
-          // Step 4: Call contract with valid signature
+          // Step 5: Call contract with valid signature and calculated amount
           setTxState('subscribing');
 
           const result = await contractService.paySubscriptionWithUsdc({
@@ -220,10 +251,10 @@ export function useSubscribe(): UseSubscribeReturn {
             referral: params.referralAddress || ZeroAddress,
             feeTier: DEFAULTS.UNISWAP_FEE_TIER,
             deadline: deadline,
-            nonce: BigInt(nonce), // ✅ Valid nonce from signature generation
-            permitDeadline: deadline, // ✅ Valid deadline
-            signature: signature, // ✅ Valid EIP-712 signature
-            maxUsdcIn6Cap: largeUsdcApproval
+            nonce: BigInt(nonce),
+            permitDeadline: deadline,
+            signature: signature,
+            maxUsdcIn6Cap: maxUsdcIn
           });
 
           const subId = result.subId.toString();

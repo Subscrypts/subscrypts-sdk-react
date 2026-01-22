@@ -88,6 +88,7 @@ export {
   getSubsTokenAddress,
   getUsdcTokenAddress,
   PERMIT2_ADDRESS,
+  DEX_QUOTER_ADDRESS,
   TOKEN_DECIMALS,
   DEFAULTS
 } from './constants';
@@ -129,5 +130,8 @@ export {
   PERMIT2_TYPES
 } from './utils/permit.utils';
 
+// ABIs
+export { DEX_QUOTER_ABI } from './utils/abi';
+
 // Version
-export const VERSION = '1.0.3';
+export const VERSION = '1.0.4';

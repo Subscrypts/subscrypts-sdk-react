@@ -20,6 +20,12 @@ export const SUBSCRYPTS_CONTRACT_ADDRESS = '0xE2E5409C4B4Be5b67C69Cc2C6507B0598D
 export const ARBITRUM_ONE_CHAIN_ID = 42161;
 
 /**
+ * Uniswap V3 Quoter address on Arbitrum One
+ * Used to get swap quotes before executing USDC payments
+ */
+export const DEX_QUOTER_ADDRESS = '0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6';
+
+/**
  * Get Subscrypts contract address for a specific chain
  */
 export function getSubscryptsContractAddress(chainId: number): string {

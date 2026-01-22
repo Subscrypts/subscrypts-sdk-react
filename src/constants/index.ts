@@ -22,6 +22,7 @@ export {
 export {
   SUBSCRYPTS_CONTRACT_ADDRESS,
   ARBITRUM_ONE_CHAIN_ID,
+  DEX_QUOTER_ADDRESS,
   getSubscryptsContractAddress
 } from './contracts';
 

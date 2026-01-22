@@ -973,3 +973,25 @@ export const ERC20_ABI = [
     "type": "function"
   }
 ] as const;
+
+/**
+ * Minimal Uniswap V3 Quoter ABI
+ * Only includes quoteExactOutputSingle for USDC quote calculations
+ */
+export const DEX_QUOTER_ABI = [
+  {
+    "inputs": [
+      { "internalType": "address", "name": "tokenIn", "type": "address" },
+      { "internalType": "address", "name": "tokenOut", "type": "address" },
+      { "internalType": "uint24", "name": "fee", "type": "uint24" },
+      { "internalType": "uint256", "name": "amountOut", "type": "uint256" },
+      { "internalType": "uint160", "name": "sqrtPriceLimitX96", "type": "uint160" }
+    ],
+    "name": "quoteExactOutputSingle",
+    "outputs": [
+      { "internalType": "uint256", "name": "amountIn", "type": "uint256" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+] as const;
