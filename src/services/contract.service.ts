@@ -55,12 +55,63 @@ export class ContractService {
   }
 
   /**
+   * Get current subscription state for a plan/subscriber
+   * Returns null-safe object with defaults for non-existent subscriptions
+   */
+  private async getSubscriptionState(
+    planId: bigint,
+    subscriber: string
+  ): Promise<{ subscriptionId: bigint; nextPaymentDate: bigint }> {
+    try {
+      const subscription = await this.contract.getPlanSubscription(planId, subscriber);
+      return {
+        subscriptionId: subscription?.subscriptionId || 0n,
+        nextPaymentDate: subscription?.nextPaymentDate || 0n
+      };
+    } catch {
+      // Contract call failed or no subscription exists
+      return {
+        subscriptionId: 0n,
+        nextPaymentDate: 0n
+      };
+    }
+  }
+
+  /**
+   * Verify subscription payment by checking nextPaymentDate change
+   * @returns subscriptionId if verification passes, null otherwise
+   */
+  private async verifySubscriptionPayment(
+    planId: bigint,
+    subscriber: string,
+    previousNextPaymentDate: bigint
+  ): Promise<bigint | null> {
+    try {
+      const subscription = await this.contract.getPlanSubscription(planId, subscriber);
+
+      // Subscription exists and nextPaymentDate has changed (increased)
+      if (subscription &&
+          subscription.nextPaymentDate > 0n &&
+          subscription.nextPaymentDate > previousNextPaymentDate) {
+        return subscription.subscriptionId;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Create a subscription with SUBS tokens
    */
   async createSubscription(
     params: SubscriptionCreateParams
   ): Promise<SubscriptionCreateResult> {
     try {
+      // Capture state before transaction
+      const stateBefore = await this.getSubscriptionState(params.planId, params.subscriber);
+      const previousNextPaymentDate = stateBefore.nextPaymentDate;
+
       const tx = await this.contract.subscriptionCreate(
         params.planId,
         params.subscriber,
@@ -77,12 +128,33 @@ export class ContractService {
         throw new ContractError('Transaction receipt not available');
       }
 
-      // Extract subscription ID from event logs
-      const subscriptionId = this.parseSubscriptionCreatedEvent(receipt);
+      // Try event parsing first
+      let subscriptionId: bigint | null = null;
+      try {
+        subscriptionId = this.parseSubscriptionCreatedEvent(receipt);
+      } catch {
+        // Event parsing failed - continue to fallback verification
+      }
+
+      // Fallback: verify via contract state
+      if (subscriptionId === null) {
+        subscriptionId = await this.verifySubscriptionPayment(
+          params.planId,
+          params.subscriber,
+          previousNextPaymentDate
+        );
+
+        if (subscriptionId === null) {
+          throw new ContractError(
+            'Subscription verification failed: nextPaymentDate did not change',
+            { txHash: receipt.hash }
+          );
+        }
+      }
 
       return {
         subscriptionId,
-        alreadyExist: false // TODO: Parse from return value if needed
+        alreadyExist: previousNextPaymentDate > 0n
       };
     } catch (error) {
       throw new ContractError('Failed to create subscription', {
@@ -96,9 +168,15 @@ export class ContractService {
    * Create a subscription with USDC (includes swap via Uniswap)
    */
   async paySubscriptionWithUsdc(
-    params: PayWithUsdcParams
+    params: PayWithUsdcParams,
+    subscriber: string
   ): Promise<PayWithUsdcResult> {
     try {
+      // STEP 1: Capture state BEFORE transaction
+      const stateBefore = await this.getSubscriptionState(params.planId, subscriber);
+      const previousNextPaymentDate = stateBefore.nextPaymentDate;
+
+      // STEP 2: Execute transaction
       const tx = await this.contract.paySubscriptionWithUsdc(
         params.planId,
         params.recurring,
@@ -118,15 +196,36 @@ export class ContractService {
         throw new ContractError('Transaction receipt not available');
       }
 
-      // Extract subscription ID from event logs
-      const subscriptionId = this.parseSubscriptionCreatedEvent(receipt);
+      // STEP 3: Try event parsing first (might work)
+      let subscriptionId: bigint | null = null;
+      let paymentData: { subsAmount18: bigint; usdcSpent6: bigint } | null = null;
 
-      // Parse USDC payment event for amounts
-      const paymentData = this.parseUsdcPaymentEvent(receipt);
+      try {
+        subscriptionId = this.parseSubscriptionCreatedEvent(receipt);
+        paymentData = this.parseUsdcPaymentEvent(receipt);
+      } catch {
+        // Event parsing failed - this is expected for multi-contract tx, continue to verification
+      }
+
+      // STEP 4: If event parsing failed, verify via contract state
+      if (subscriptionId === null) {
+        subscriptionId = await this.verifySubscriptionPayment(
+          params.planId,
+          subscriber,
+          previousNextPaymentDate
+        );
+
+        if (subscriptionId === null) {
+          throw new ContractError(
+            'Subscription verification failed: nextPaymentDate did not change',
+            { txHash: receipt.hash, planId: params.planId.toString() }
+          );
+        }
+      }
 
       return {
         subId: subscriptionId,
-        subExist: false,
+        subExist: previousNextPaymentDate > 0n,
         subsPaid18: paymentData?.subsAmount18 || 0n,
         usdcSpent6: paymentData?.usdcSpent6 || 0n
       };

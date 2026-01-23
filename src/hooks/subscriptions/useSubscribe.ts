@@ -247,18 +247,21 @@ export function useSubscribe(): UseSubscribeReturn {
           // Step 5: Call contract with valid signature and calculated amount
           setTxState('subscribing');
 
-          const result = await contractService.paySubscriptionWithUsdc({
-            planId: BigInt(params.planId),
-            recurring: params.autoRenew,
-            remainingCycles: BigInt(params.cycleLimit),
-            referral: params.referralAddress || ZeroAddress,
-            feeTier: DEFAULTS.UNISWAP_FEE_TIER,
-            deadline: deadline,
-            nonce: BigInt(nonce),
-            permitDeadline: deadline,
-            signature: signature,
-            maxUsdcIn6Cap: maxUsdcIn
-          });
+          const result = await contractService.paySubscriptionWithUsdc(
+            {
+              planId: BigInt(params.planId),
+              recurring: params.autoRenew,
+              remainingCycles: BigInt(params.cycleLimit),
+              referral: params.referralAddress || ZeroAddress,
+              feeTier: DEFAULTS.UNISWAP_FEE_TIER,
+              deadline: deadline,
+              nonce: BigInt(nonce),
+              permitDeadline: deadline,
+              signature: signature,
+              maxUsdcIn6Cap: maxUsdcIn
+            },
+            wallet.address  // Pass subscriber address for verification
+          );
 
           const subId = result.subId.toString();
           setSubscriptionId(subId);
