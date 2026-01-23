@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.9] - 2025-01-23
+
+### Fixed
+- **Missing `getSubscription` function in ABI** - Added the `getSubscription(uint256 subscriptionId)` function to the contract ABI
+  - Root cause: v1.0.8's two-step lookup called `getSubscription()` but the function wasn't in the ABI
+  - Error was: `TypeError: this.contract.getSubscription is not a function`
+- **Fixed field name access** - Changed from `subscriptionId` to `id` (correct struct field name)
+- **Fixed array index** - `nextPaymentDate` is at index 11, not index 10
+- Added additional debug logging for `getPlanSubscription` result inspection
+
 ## [1.0.8] - 2025-01-23
 
 ### Fixed

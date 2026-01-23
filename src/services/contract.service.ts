@@ -68,16 +68,24 @@ export class ContractService {
   ): Promise<{ subscriptionId: bigint; nextPaymentDate: bigint }> {
     try {
       // Step 1: Get subscriptionId from plan/subscriber mapping
+      // getPlanSubscription returns Subscription struct where 'id' is at index 0
       const planSubscription = await this.contract.getPlanSubscription(planId, subscriber);
-      const subscriptionId = planSubscription?.subscriptionId || planSubscription?.[0] || 0n;
+      const subscriptionId = planSubscription?.id ?? planSubscription?.[0] ?? 0n;
+
+      logger.debug('getPlanSubscription result:', {
+        rawId: planSubscription?.id?.toString(),
+        rawIndex0: planSubscription?.[0]?.toString(),
+        resolvedId: subscriptionId.toString()
+      });
 
       if (subscriptionId === 0n) {
         return { subscriptionId: 0n, nextPaymentDate: 0n };
       }
 
       // Step 2: Get full subscription record with real nextPaymentDate
+      // getSubscription returns Subscription struct where 'nextPaymentDate' is at index 11
       const subscription = await this.contract.getSubscription(subscriptionId);
-      const nextPaymentDate = subscription?.nextPaymentDate || subscription?.[10] || 0n;
+      const nextPaymentDate = subscription?.nextPaymentDate ?? subscription?.[11] ?? 0n;
 
       logger.debug('getSubscriptionState resolved:', {
         subscriptionId: subscriptionId.toString(),
@@ -104,16 +112,18 @@ export class ContractService {
   ): Promise<bigint | null> {
     try {
       // Step 1: Get subscriptionId from plan/subscriber mapping
+      // 'id' field is at index 0 in the Subscription struct
       const planSubscription = await this.contract.getPlanSubscription(planId, subscriber);
-      const subscriptionId = planSubscription?.subscriptionId || planSubscription?.[0] || 0n;
+      const subscriptionId = planSubscription?.id ?? planSubscription?.[0] ?? 0n;
 
       if (subscriptionId === 0n) {
         return null;
       }
 
       // Step 2: Get full subscription record with real nextPaymentDate
+      // 'nextPaymentDate' is at index 11 in the Subscription struct
       const subscription = await this.contract.getSubscription(subscriptionId);
-      const nextPaymentDate = subscription?.nextPaymentDate || subscription?.[10] || 0n;
+      const nextPaymentDate = subscription?.nextPaymentDate ?? subscription?.[11] ?? 0n;
 
       logger.debug('verifySubscriptionPayment check:', {
         subscriptionId: subscriptionId.toString(),

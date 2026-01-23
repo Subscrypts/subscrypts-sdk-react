@@ -598,6 +598,87 @@ export const SUBSCRYPTS_ABI = [
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSubscription",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "merchantAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "planId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "subscriberAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "currencyCode",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "subscriptionAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "paymentFrequency",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRecurring",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "remainingCycles",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "customAttributes",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastPaymentDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nextPaymentDate",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SubscryptsStorage.Subscription",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "planid",
         "type": "uint256"
       },
