@@ -7,6 +7,7 @@
 
 import { ethers } from 'ethers';
 import { PERMIT2_ADDRESS } from '../constants';
+import { logger } from './logger';
 
 /**
  * EIP-712 domain for PERMIT2 on Arbitrum One
@@ -64,6 +65,13 @@ export async function generatePermit2Signature(
   spender: string,
   deadline: bigint
 ): Promise<{ signature: string; nonce: string }> {
+  logger.debug('Generating PERMIT2 signature:', {
+    token: tokenAddress,
+    amount: amount.toString(),
+    spender,
+    deadline: deadline.toString()
+  });
+
   // Generate random nonce for replay protection
   const nonce = ethers.hexlify(ethers.randomBytes(32));
 
@@ -78,12 +86,20 @@ export async function generatePermit2Signature(
     deadline: deadline.toString()
   };
 
+  logger.debug('EIP-712 message:', message);
+
   // Sign typed data (will prompt user's wallet)
+  logger.info('Requesting wallet signature...');
   const signature = await signer.signTypedData(
     PERMIT2_DOMAIN,
     PERMIT2_TYPES,
     message
   );
+
+  logger.debug('PERMIT2 signature obtained:', {
+    nonce,
+    signatureLength: signature.length
+  });
 
   return { signature, nonce };
 }

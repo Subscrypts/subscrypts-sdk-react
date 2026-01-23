@@ -21,6 +21,14 @@ export interface SubscryptsProviderProps {
   rpcUrl?: string;
   /** Balance refresh interval in milliseconds (default: 30000) */
   balanceRefreshInterval?: number;
+  /**
+   * Debug mode for SDK logging
+   * - 'silent': No console output
+   * - 'info': User-friendly transaction status and errors (default)
+   * - 'debug': Full developer debugging with all data
+   * @default 'info'
+   */
+  debug?: 'silent' | 'info' | 'debug';
 }
 
 /**

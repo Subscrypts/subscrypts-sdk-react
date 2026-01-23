@@ -14,6 +14,7 @@ import { TransactionError, InsufficientBalanceError, ContractError } from '../..
 import { generatePermit2Signature } from '../../utils/permit.utils';
 import { DEX_QUOTER_ABI } from '../../utils/subscryptsABI';
 import { ZeroAddress, Contract } from 'ethers';
+import { logger, formatLogValue } from '../../utils/logger';
 
 /**
  * Subscription parameters
@@ -82,23 +83,33 @@ export function useSubscribe(): UseSubscribeReturn {
 
   const subscribe = useCallback(
     async (params: SubscribeParams): Promise<string> => {
+      logger.group(`Subscribe (${params.paymentMethod})`);
+      logger.debug('Subscribe params:', formatLogValue(params));
+
       // Validation
       try {
         validatePlanId(params.planId);
         validateCycleLimit(params.cycleLimit);
+        logger.debug('Validation passed');
       } catch (validationError) {
+        logger.error('Validation failed:', validationError);
+        logger.groupEnd();
         setError(validationError as Error);
         throw validationError;
       }
 
       if (!subscryptsContract || !wallet.address || !signer) {
         const err = new Error('Wallet not connected or contract not initialized');
+        logger.error('Pre-condition failed:', err.message);
+        logger.groupEnd();
         setError(err);
         throw err;
       }
 
       if (!subsTokenContract || !usdcTokenContract) {
         const err = new Error('Token contracts not initialized');
+        logger.error('Pre-condition failed:', err.message);
+        logger.groupEnd();
         setError(err);
         throw err;
       }
@@ -115,6 +126,7 @@ export function useSubscribe(): UseSubscribeReturn {
 
         if (params.paymentMethod === 'SUBS') {
           // SUBS payment flow
+          logger.info('Starting SUBS payment flow');
           const subsService = new TokenService(
             subsTokenContract.target as string,
             signer,
@@ -122,10 +134,8 @@ export function useSubscribe(): UseSubscribeReturn {
             'SUBS'
           );
 
-          // Get plan cost (this would normally come from contract)
-          // For now, we'll let the contract handle it
-
           setTxState('approving');
+          logger.info('Checking SUBS allowance...');
 
           // Ensure allowance (this will check balance and approve if needed)
           // We use a large approval amount since the exact cost needs to be fetched from contract
@@ -137,14 +147,17 @@ export function useSubscribe(): UseSubscribeReturn {
               subscryptsAddress,
               largeApproval
             );
+            logger.debug('SUBS allowance confirmed');
           } catch (err) {
             if (err instanceof InsufficientBalanceError) {
+              logger.error('Insufficient SUBS balance:', err);
+              logger.groupEnd();
               setError(err);
               setIsSubscribing(false);
               setTxState('error');
               throw err;
             }
-            // If it's just an approval issue, continue
+            logger.warn('Allowance check warning (continuing):', err);
           }
 
           setTxState('subscribing');
@@ -165,10 +178,14 @@ export function useSubscribe(): UseSubscribeReturn {
           setTxState('success');
           setIsSubscribing(false);
 
+          logger.success(`Subscription ID: ${subId}`);
+          logger.groupEnd();
+
           return subId;
 
         } else {
           // USDC payment flow with calculated amount
+          logger.info('Starting USDC payment flow');
           const usdcService = new TokenService(
             usdcTokenContract.target as string,
             signer,
@@ -181,24 +198,36 @@ export function useSubscribe(): UseSubscribeReturn {
 
           const provider = signer.provider;
           if (!provider) {
+            logger.error('Provider not available');
+            logger.groupEnd();
             throw new ContractError('Provider not available');
           }
 
           // Fetch plan from contract to get required SUBS amount
+          logger.info('Fetching plan data...');
           const plan = await subscryptsContract.getPlan(BigInt(params.planId));
+          logger.debug('Plan data:', formatLogValue({
+            subscriptionAmount: plan.subscriptionAmount,
+            currencyCode: plan.currencyCode
+          }));
 
           // Calculate required SUBS (handle both SUBS and USD-denominated plans)
           let requiredSubs18 = plan.subscriptionAmount;
 
           if (Number(plan.currencyCode) === 1) {
             // USD-denominated plan: convert to SUBS at current price
+            logger.debug('USD-denominated plan, converting to SUBS...');
             const conversion = await subscryptsContract.convertOtherCurrencyToToken(
               plan.subscriptionAmount
             );
             requiredSubs18 = conversion.outputSUBS18;
+            logger.debug('Conversion result:', { outputSUBS18: requiredSubs18.toString() });
           }
 
+          logger.debug('Required SUBS:', requiredSubs18.toString());
+
           // Quote USDC needed from Uniswap QuoterV2
+          logger.info('Fetching USDC quote from Uniswap...');
           const quoter = new Contract(DEX_QUOTER_ADDRESS, DEX_QUOTER_ABI, provider);
           const quoteResult = await quoter.quoteExactOutputSingle.staticCall({
             tokenIn: USDC_ADDRESS,
@@ -214,26 +243,38 @@ export function useSubscribe(): UseSubscribeReturn {
           // Add 0.5% buffer for price slippage
           const maxUsdcIn = (usdcNeeded * 10050n) / 10000n;
 
+          logger.debug('Quote result:', {
+            usdcNeeded: usdcNeeded.toString(),
+            maxUsdcIn: maxUsdcIn.toString(),
+            slippageBuffer: '0.5%'
+          });
+
           // Step 2: Approve PERMIT2 for calculated USDC amount
+          logger.info('Checking USDC allowance for PERMIT2...');
           try {
             await usdcService.ensureAllowance(
               wallet.address,
               PERMIT2_ADDRESS,
               maxUsdcIn
             );
+            logger.debug('USDC allowance confirmed for PERMIT2');
           } catch (err) {
             if (err instanceof InsufficientBalanceError) {
+              logger.error('Insufficient USDC balance:', err);
+              logger.groupEnd();
               setError(err);
               setIsSubscribing(false);
               setTxState('error');
               throw err;
             }
+            logger.warn('Allowance check warning (continuing):', err);
           }
 
           // Step 3: Generate deadline for permit (30 minutes from now)
           const deadline = BigInt(Math.floor(Date.now() / 1000) + 1800);
 
           // Step 4: Generate PERMIT2 signature with calculated amount
+          logger.info('Generating PERMIT2 signature...');
           setTxState('approving');
 
           const { signature, nonce } = await generatePermit2Signature(
@@ -243,6 +284,12 @@ export function useSubscribe(): UseSubscribeReturn {
             subscryptsAddress,
             deadline
           );
+
+          logger.debug('PERMIT2 signature generated:', {
+            nonce: nonce.toString(),
+            deadline: deadline.toString(),
+            signatureLength: signature.length
+          });
 
           // Step 5: Call contract with valid signature and calculated amount
           setTxState('subscribing');
@@ -268,9 +315,14 @@ export function useSubscribe(): UseSubscribeReturn {
           setTxState('success');
           setIsSubscribing(false);
 
+          logger.success(`Subscription ID: ${subId}`);
+          logger.groupEnd();
+
           return subId;
         }
       } catch (err) {
+        logger.error('Subscribe failed:', err);
+        logger.groupEnd();
         const txError = new TransactionError(
           'Failed to create subscription',
           undefined,

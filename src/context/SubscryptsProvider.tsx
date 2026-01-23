@@ -16,6 +16,8 @@ import {
 } from '../constants';
 import { SUBSCRYPTS_ABI } from '../utils/subscryptsABI';
 import { WalletError } from '../utils/errors';
+import { logger } from '../utils/logger';
+import { VERSION } from '../index';
 
 /**
  * Subscrypts Provider Component
@@ -41,9 +43,28 @@ export function SubscryptsProvider({
   enableWalletManagement = true,
   externalProvider,
   network: networkName = DEFAULTS.NETWORK,
-  balanceRefreshInterval = DEFAULTS.BALANCE_REFRESH_INTERVAL
+  balanceRefreshInterval = DEFAULTS.BALANCE_REFRESH_INTERVAL,
+  debug = 'info'
 }: SubscryptsProviderProps) {
   const network = getNetworkConfig(networkName);
+
+  // Configure logger on mount
+  useEffect(() => {
+    logger.configure({ level: debug });
+
+    if (debug !== 'silent') {
+      logger.info(`SDK v${VERSION} initialized`);
+    }
+
+    if (debug === 'debug') {
+      logger.debug('Configuration:', {
+        enableWalletManagement,
+        network: networkName,
+        balanceRefreshInterval,
+        debugLevel: debug
+      });
+    }
+  }, [debug, enableWalletManagement, networkName, balanceRefreshInterval]);
 
   // Wallet state
   const [walletState, setWalletState] = useState<WalletState>({
@@ -170,7 +191,11 @@ export function SubscryptsProvider({
         isConnecting: false,
         error: null
       });
+
+      logger.info(`Wallet connected: ${result.address.slice(0, 6)}...${result.address.slice(-4)}`);
+      logger.debug('Wallet details:', { address: result.address, chainId: result.chainId });
     } catch (error) {
+      logger.error('Wallet connection failed:', error);
       setWalletState(prev => ({
         ...prev,
         isConnecting: false,
@@ -184,6 +209,7 @@ export function SubscryptsProvider({
    * Disconnect wallet
    */
   const disconnect = useCallback(async () => {
+    logger.info('Wallet disconnected');
     setSigner(null);
     setProvider(null);
     setWalletState({
