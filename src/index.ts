@@ -137,4 +137,4 @@ export { DEX_QUOTER_ABI } from './utils/subscryptsABI';
 export { logger, type LogLevel, type LoggerConfig } from './utils/logger';
 
 // Version
-export const VERSION = '1.0.7';
+export const VERSION = '1.0.8';

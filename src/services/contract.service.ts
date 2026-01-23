@@ -57,29 +57,44 @@ export class ContractService {
 
   /**
    * Get current subscription state for a plan/subscriber
-   * Returns null-safe object with defaults for non-existent subscriptions
+   * Uses two-step lookup: getPlanSubscription → getSubscription
+   *
+   * Note: getPlanSubscription() returns subscriptionId but NOT the real nextPaymentDate.
+   * We must call getSubscription(subscriptionId) to get the actual nextPaymentDate.
    */
   private async getSubscriptionState(
     planId: bigint,
     subscriber: string
   ): Promise<{ subscriptionId: bigint; nextPaymentDate: bigint }> {
     try {
-      const subscription = await this.contract.getPlanSubscription(planId, subscriber);
-      return {
-        subscriptionId: subscription?.subscriptionId || 0n,
-        nextPaymentDate: subscription?.nextPaymentDate || 0n
-      };
-    } catch {
-      // Contract call failed or no subscription exists
-      return {
-        subscriptionId: 0n,
-        nextPaymentDate: 0n
-      };
+      // Step 1: Get subscriptionId from plan/subscriber mapping
+      const planSubscription = await this.contract.getPlanSubscription(planId, subscriber);
+      const subscriptionId = planSubscription?.subscriptionId || planSubscription?.[0] || 0n;
+
+      if (subscriptionId === 0n) {
+        return { subscriptionId: 0n, nextPaymentDate: 0n };
+      }
+
+      // Step 2: Get full subscription record with real nextPaymentDate
+      const subscription = await this.contract.getSubscription(subscriptionId);
+      const nextPaymentDate = subscription?.nextPaymentDate || subscription?.[10] || 0n;
+
+      logger.debug('getSubscriptionState resolved:', {
+        subscriptionId: subscriptionId.toString(),
+        nextPaymentDate: nextPaymentDate.toString()
+      });
+
+      return { subscriptionId, nextPaymentDate };
+    } catch (error) {
+      logger.debug('getSubscriptionState error:', error);
+      return { subscriptionId: 0n, nextPaymentDate: 0n };
     }
   }
 
   /**
    * Verify subscription payment by checking nextPaymentDate change
+   * Uses two-step lookup for accurate state verification
+   *
    * @returns subscriptionId if verification passes, null otherwise
    */
   private async verifySubscriptionPayment(
@@ -88,16 +103,31 @@ export class ContractService {
     previousNextPaymentDate: bigint
   ): Promise<bigint | null> {
     try {
-      const subscription = await this.contract.getPlanSubscription(planId, subscriber);
+      // Step 1: Get subscriptionId from plan/subscriber mapping
+      const planSubscription = await this.contract.getPlanSubscription(planId, subscriber);
+      const subscriptionId = planSubscription?.subscriptionId || planSubscription?.[0] || 0n;
+
+      if (subscriptionId === 0n) {
+        return null;
+      }
+
+      // Step 2: Get full subscription record with real nextPaymentDate
+      const subscription = await this.contract.getSubscription(subscriptionId);
+      const nextPaymentDate = subscription?.nextPaymentDate || subscription?.[10] || 0n;
+
+      logger.debug('verifySubscriptionPayment check:', {
+        subscriptionId: subscriptionId.toString(),
+        previousNextPaymentDate: previousNextPaymentDate.toString(),
+        currentNextPaymentDate: nextPaymentDate.toString()
+      });
 
       // Subscription exists and nextPaymentDate has changed (increased)
-      if (subscription &&
-          subscription.nextPaymentDate > 0n &&
-          subscription.nextPaymentDate > previousNextPaymentDate) {
-        return subscription.subscriptionId;
+      if (nextPaymentDate > 0n && nextPaymentDate > previousNextPaymentDate) {
+        return subscriptionId;
       }
       return null;
-    } catch {
+    } catch (error) {
+      logger.debug('verifySubscriptionPayment error:', error);
       return null;
     }
   }
