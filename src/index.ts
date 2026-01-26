@@ -131,10 +131,10 @@ export {
 } from './utils/permit.utils';
 
 // ABIs
-export { DEX_QUOTER_ABI } from './utils/subscryptsABI';
+export { DEX_QUOTER_ABI } from './contract';
 
 // Logger
 export { logger, type LogLevel, type LoggerConfig } from './utils/logger';
 
 // Version
-export const VERSION = '1.0.9';
+export const VERSION = '1.0.10';

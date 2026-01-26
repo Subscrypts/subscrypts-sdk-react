@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.10] - 2025-01-26
+
+### Changed
+- **Centralized contract files** - Reorganized smart contract interaction files into `src/contract/` directory
+  - `src/contract/config.ts` - Network configuration, addresses, decimals (from `src/constants/blockchain.ts`)
+  - `src/contract/methods.ts` - Contract method wrappers (from `src/contractMethods.ts`)
+  - `src/contract/abis/` - Contract ABIs split into separate files:
+    - `subscrypts.abi.ts` - Main Subscrypts Diamond contract ABI
+    - `erc20.abi.ts` - Standard ERC20 token interface
+    - `quoter.abi.ts` - Uniswap V3 QuoterV2 ABI
+  - `src/contract/index.ts` - Barrel exports for all contract-related code
+- Removed old scattered files: `src/constants/blockchain.ts`, `src/utils/subscryptsABI.ts`, `src/contractMethods.ts`
+- Added `.claude/CLAUDE.md` with project instructions
+
 ## [1.0.9] - 2025-01-23
 
 ### Fixed

@@ -12,7 +12,7 @@ import { getSubscryptsContractAddress, DECIMALS, DEFAULTS, PERMIT2_ADDRESS, DEX_
 import { validatePlanId, validateCycleLimit } from '../../utils/validators';
 import { TransactionError, InsufficientBalanceError, ContractError } from '../../utils/errors';
 import { generatePermit2Signature } from '../../utils/permit.utils';
-import { DEX_QUOTER_ABI } from '../../utils/subscryptsABI';
+import { DEX_QUOTER_ABI } from '../../contract';
 import { ZeroAddress, Contract } from 'ethers';
 import { logger, formatLogValue } from '../../utils/logger';
 

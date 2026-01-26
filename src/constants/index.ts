@@ -1,10 +1,10 @@
 /**
  * Constants for @subscrypts/react-sdk
  *
- * All configuration is centralized in blockchain.ts
+ * Re-exports from centralized src/contract/ directory
  */
 
-// Re-export everything from central blockchain config
+// Re-export everything from central contract config
 export {
   // Network
   CHAIN_ID,
@@ -39,16 +39,16 @@ export {
   // Helpers
   isArbitrumNetwork,
   getSubscryptsAddress
-} from './blockchain';
+} from '../contract';
 
 // Legacy aliases for backwards compatibility
-export { NETWORK_CONFIG as ARBITRUM_ONE } from './blockchain';
-export { SUBSCRYPTS_ADDRESS as SUBSCRYPTS_CONTRACT_ADDRESS } from './blockchain';
-export { CHAIN_ID as ARBITRUM_ONE_CHAIN_ID } from './blockchain';
-export { DECIMALS as TOKEN_DECIMALS } from './blockchain';
+export { NETWORK_CONFIG as ARBITRUM_ONE } from '../contract';
+export { SUBSCRYPTS_ADDRESS as SUBSCRYPTS_CONTRACT_ADDRESS } from '../contract';
+export { CHAIN_ID as ARBITRUM_ONE_CHAIN_ID } from '../contract';
+export { DECIMALS as TOKEN_DECIMALS } from '../contract';
 
 // Legacy helper functions
-import { NETWORK_CONFIG, CHAIN_ID, SUBS_TOKEN_ADDRESS, USDC_ADDRESS, getSubscryptsAddress } from './blockchain';
+import { NETWORK_CONFIG, CHAIN_ID, SUBS_TOKEN_ADDRESS, USDC_ADDRESS, getSubscryptsAddress } from '../contract';
 
 export const getNetworkConfig = (_network?: 'arbitrum') => NETWORK_CONFIG;
 export const getSubscryptsContractAddress = getSubscryptsAddress;
