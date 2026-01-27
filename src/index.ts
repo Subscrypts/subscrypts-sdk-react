@@ -32,7 +32,9 @@ export {
   useSubscriptionStatus,
   useSubscribe,
   useTokenBalance,
-  useWallet
+  useWallet,
+  usePlan,
+  usePlans
 } from './hooks';
 export type {
   UseSubscriptionStatusReturn,
@@ -40,7 +42,9 @@ export type {
   SubscribeParams,
   UseTokenBalanceReturn,
   TokenType,
-  UseWalletReturn
+  UseWalletReturn,
+  UsePlanReturn,
+  UsePlansReturn
 } from './hooks';
 
 // Components
@@ -49,7 +53,15 @@ export {
   CheckoutWizard,
   SubscryptsButton,
   LoadingSpinner,
-  Modal
+  Modal,
+  PlanCard,
+  PricingTable
+} from './components';
+export type {
+  PlanCardProps,
+  PlanField,
+  PricingTableProps,
+  PlanConfig
 } from './components';
 
 // Types
@@ -137,4 +149,4 @@ export { DEX_QUOTER_ABI } from './contract';
 export { logger, type LogLevel, type LoggerConfig } from './utils/logger';
 
 // Version
-export const VERSION = '1.0.10';
+export const VERSION = '1.0.11';

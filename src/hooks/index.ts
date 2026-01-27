@@ -13,3 +13,6 @@ export * from './tokens';
 
 // Wallet hooks
 export * from './wallet';
+
+// Plan hooks
+export * from './plans';

@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.11] - 2025-01-27
+
+### Added
+- **Plan Hooks** - New React hooks for fetching subscription plans from smart contract:
+  - `usePlan(planId)` - Fetch single plan with loading/error states
+  - `usePlans(planIds)` - Fetch multiple plans in parallel
+- **Pricing Components** - New UI components for displaying subscription plans:
+  - `PlanCard` - Configurable plan display card with `showFields` prop for customization
+  - `PricingTable` - Grid layout for multiple plans with built-in checkout integration
+- **Wallet Event Callbacks** - New provider props for wallet state changes:
+  - `onAccountChange(newAddress, oldAddress)` - Called when user switches wallet accounts
+  - `onChainChange(newChainId, oldChainId)` - Called when user switches networks
+- **Arbiscan Transaction Links** - Transaction hash links in checkout success step
+- **Expanded ABI library** - Added 4 new Uniswap V3 contract ABIs for future DEX integration:
+  - `dexFactoryABI` - Uniswap V3 Factory contract
+  - `dexPairABI` - Uniswap V3 Pool contract
+  - `dexRouterABI` - Uniswap V3 SwapRouter contract
+  - `dexPositionManagerABI` - Uniswap V3 NonfungiblePositionManager contract
+- Added `transferFrom` method to `dexUSDCABI` for ERC20 operations
+- Centralized all 80+ Subscrypts smart contract methods in `src/contract/methods.ts`
+
+### Changed
+- **Standardized ABI exports** - Renamed exports to use camelCase naming convention:
+  - `SubscryptsABI` → `subscryptsABI`
+  - All new ABIs use camelCase (e.g., `dexQuoterABI`, `dexRouterABI`)
+- Added `as const` assertion to all ABIs for better TypeScript type inference
+- Backwards compatibility aliases maintained: `SUBSCRYPTS_ABI`, `ERC20_ABI`, `DEX_QUOTER_ABI`
+- `CheckoutWizard` and `TransactionStep` now display Arbiscan link on success
+
+### Removed
+- Old ABI files replaced by new standardized versions:
+  - `subscrypts.abi.ts` → `Subscrypts.ts`
+  - `erc20.abi.ts` → `dexUSDCABI.ts`
+  - `quoter.abi.ts` → `dexQuoterABI.ts`
+
 ## [1.0.10] - 2025-01-26
 
 ### Changed

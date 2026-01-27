@@ -568,6 +568,9 @@ function PricingPage() {
 | `enableWalletManagement` | `boolean` | No | `false` | Enable built-in wallet connection |
 | `defaultNetwork` | `number` | No | `42161` | Arbitrum network (42161=Arbitrum One mainnet) |
 | `externalProvider` | `Signer` | No | - | Use external wallet (Wagmi/RainbowKit) |
+| `onAccountChange` | `(newAddr, oldAddr) => void` | No | - | Callback when wallet account changes |
+| `onChainChange` | `(newChainId, oldChainId) => void` | No | - | Callback when network changes |
+| `debug` | `'silent' \| 'info' \| 'debug'` | No | `'info'` | Logging level |
 | `children` | `ReactNode` | Yes | - | Your app components |
 
 ---
@@ -655,6 +658,66 @@ const [isOpen, setIsOpen] = useState(false);
 | `referralAddress` | `string` | No | Referral address |
 | `onSuccess` | `(id: string) => void` | No | Success callback |
 | `onError` | `(error: Error) => void` | No | Error callback |
+
+---
+
+#### `<PricingTable>`
+
+**Display multiple subscription plans** in a responsive grid with built-in checkout.
+
+```tsx
+<PricingTable
+  plans={[
+    { planId: '1', title: 'Basic', subscribeLabel: 'Start Free' },
+    { planId: '2', title: 'Pro', featured: true, subscribeLabel: 'Go Pro' },
+    { planId: '3', title: 'Enterprise', subscribeLabel: 'Contact Us' }
+  ]}
+  currency="SUBS"
+  showFields={['description', 'amount', 'frequency', 'subscribers']}
+  columns={3}
+/>
+```
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `plans` | `(string \| PlanConfig)[]` | Yes | - | Array of plan IDs or configurations |
+| `currency` | `'SUBS' \| 'USDC'` | No | `'SUBS'` | Currency for prices |
+| `showFields` | `PlanField[]` | No | `['description', 'amount', 'frequency']` | Fields to display |
+| `columns` | `1 \| 2 \| 3 \| 4` | No | auto | Grid columns |
+| `onSubscribe` | `(planId: string) => void` | No | - | Custom subscribe handler |
+| `referralAddress` | `string` | No | - | Referral for all subscriptions |
+
+---
+
+#### `<PlanCard>`
+
+**Single plan display card** with configurable fields.
+
+```tsx
+<PlanCard
+  plan={plan}
+  currency="SUBS"
+  showFields={['description', 'amount', 'frequency']}
+  onSubscribe={(id) => openCheckout(id)}
+  featured={true}
+  title="Premium Plan"
+/>
+```
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `plan` | `Plan` | Yes | - | Plan data from smart contract |
+| `currency` | `'SUBS' \| 'USDC'` | No | `'SUBS'` | Currency for price display |
+| `showFields` | `PlanField[]` | No | `['description', 'amount', 'frequency']` | Fields to show |
+| `onSubscribe` | `(planId: string) => void` | No | - | Subscribe click handler |
+| `featured` | `boolean` | No | `false` | Highlight this plan |
+| `title` | `string` | No | - | Custom title (overrides description) |
+
+**Available `PlanField` values:** `'description'`, `'amount'`, `'frequency'`, `'subscribers'`, `'merchant'`, `'referralBonus'`, `'attributes'`
 
 ---
 
@@ -790,6 +853,56 @@ console.log(`Balance: ${formatted} SUBS`); // "Balance: 100.50 SUBS"
   formatted: string;                // Human-readable balance
   isLoading: boolean;               // Loading state
   refetch: () => Promise<void>;     // Refresh balance
+}
+```
+
+---
+
+#### `usePlan`
+
+**Fetch a single plan** from the smart contract.
+
+```tsx
+const { plan, isLoading, error, refetch } = usePlan('1');
+
+if (plan) {
+  console.log(`Plan: ${plan.description}, Amount: ${plan.subscriptionAmount}`);
+}
+```
+
+**Returns:**
+
+```typescript
+{
+  plan: Plan | null;                // Plan data
+  isLoading: boolean;               // Loading state
+  error: Error | null;              // Error if any
+  refetch: () => Promise<void>;     // Refresh plan
+}
+```
+
+---
+
+#### `usePlans`
+
+**Fetch multiple plans** in parallel from the smart contract.
+
+```tsx
+const { plans, isLoading, error, refetch } = usePlans(['1', '2', '3']);
+
+plans.forEach(plan => {
+  console.log(plan.description);
+});
+```
+
+**Returns:**
+
+```typescript
+{
+  plans: Plan[];                    // Array of plans
+  isLoading: boolean;               // Loading state
+  error: Error | null;              // Error if any
+  refetch: () => Promise<void>;     // Refresh all plans
 }
 ```
 

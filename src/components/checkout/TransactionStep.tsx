@@ -10,6 +10,7 @@ interface TransactionStepProps {
   txState: 'idle' | 'approving' | 'waiting_approval' | 'subscribing' | 'waiting_subscribe' | 'success' | 'error';
   error: Error | null;
   subscriptionId: string | null;
+  txHash: string | null;
   onExecute: () => void;
   onClose: () => void;
   onBack: () => void;
@@ -20,6 +21,7 @@ export function TransactionStep({
   txState,
   error,
   subscriptionId,
+  txHash,
   onExecute,
   onClose,
   onBack
@@ -77,6 +79,17 @@ export function TransactionStep({
             <p className="subscrypts-info-label">Subscription ID</p>
             <p className="subscrypts-info-value">{subscriptionId}</p>
           </div>
+        )}
+
+        {txHash && (
+          <a
+            href={`https://arbiscan.io/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="subscrypts-link subscrypts-arbiscan-link"
+          >
+            View on Arbiscan →
+          </a>
         )}
       </div>
 

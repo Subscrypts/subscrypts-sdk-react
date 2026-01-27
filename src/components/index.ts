@@ -11,6 +11,9 @@ export * from './checkout';
 // Buttons
 export * from './buttons';
 
+// Pricing
+export * from './pricing';
+
 // Shared components
 export { LoadingSpinner } from './shared/LoadingSpinner';
 export { Modal } from './shared/Modal';

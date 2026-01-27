@@ -44,7 +44,9 @@ export function SubscryptsProvider({
   externalProvider,
   network: networkName = DEFAULTS.NETWORK,
   balanceRefreshInterval = DEFAULTS.BALANCE_REFRESH_INTERVAL,
-  debug = 'info'
+  debug = 'info',
+  onAccountChange,
+  onChainChange
 }: SubscryptsProviderProps) {
   const network = getNetworkConfig(networkName);
 
@@ -273,14 +275,25 @@ export function SubscryptsProvider({
       if (accounts.length === 0) {
         disconnect();
       } else if (accounts[0] !== walletState.address) {
+        const oldAddress = walletState.address;
         setWalletState(prev => ({ ...prev, address: accounts[0] }));
+        // Call the callback if provided
+        if (onAccountChange && oldAddress) {
+          onAccountChange(accounts[0], oldAddress);
+        }
       }
     };
 
     const handleChainChanged = (...args: unknown[]) => {
       const chainIdHex = args[0] as string;
       const newChainId = parseInt(chainIdHex, 16);
+      const oldChainId = walletState.chainId;
       setWalletState(prev => ({ ...prev, chainId: newChainId }));
+
+      // Call the callback if provided
+      if (onChainChange && oldChainId) {
+        onChainChange(newChainId, oldChainId);
+      }
 
       // Auto-switch to correct network if wrong network
       if (newChainId !== network.chainId) {
@@ -295,7 +308,7 @@ export function SubscryptsProvider({
       walletService.removeAccountsChangedListener(handleAccountsChanged);
       walletService.removeChainChangedListener(handleChainChanged);
     };
-  }, [enableWalletManagement, walletService, disconnect, walletState.address, network.chainId, switchNetwork]);
+  }, [enableWalletManagement, walletService, disconnect, walletState.address, walletState.chainId, network.chainId, switchNetwork, onAccountChange, onChainChange]);
 
   /**
    * Context value

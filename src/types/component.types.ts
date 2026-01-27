@@ -29,6 +29,19 @@ export interface SubscryptsProviderProps {
    * @default 'info'
    */
   debug?: 'silent' | 'info' | 'debug';
+  /**
+   * Callback when wallet account changes
+   * Useful for refreshing page state when user switches accounts
+   * @param newAddress - The new wallet address
+   * @param oldAddress - The previous wallet address
+   */
+  onAccountChange?: (newAddress: string, oldAddress: string) => void;
+  /**
+   * Callback when network/chain changes
+   * @param newChainId - The new chain ID
+   * @param oldChainId - The previous chain ID
+   */
+  onChainChange?: (newChainId: number, oldChainId: number) => void;
 }
 
 /**

@@ -44,7 +44,7 @@ export function CheckoutWizard({
   const [autoRenew, setAutoRenew] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('SUBS');
 
-  const { subscribe, txState, error, subscriptionId } = useSubscribe();
+  const { subscribe, txState, error, subscriptionId, txHash } = useSubscribe();
 
   const handleConfigure = () => {
     setCurrentStep('transaction');
@@ -107,6 +107,7 @@ export function CheckoutWizard({
           txState={txState}
           error={error}
           subscriptionId={subscriptionId}
+          txHash={txHash}
           onExecute={handleSubscribe}
           onClose={handleClose}
           onBack={() => setCurrentStep('configuration')}
@@ -124,6 +125,16 @@ export function CheckoutWizard({
             <p className="subscrypts-success-id">
               Subscription ID: {subscriptionId}
             </p>
+          )}
+          {txHash && (
+            <a
+              href={`https://arbiscan.io/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="subscrypts-link subscrypts-arbiscan-link"
+            >
+              View on Arbiscan →
+            </a>
           )}
           <button
             onClick={handleClose}
