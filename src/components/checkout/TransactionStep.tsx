@@ -4,6 +4,7 @@
 
 import { PaymentMethod } from '../../types';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
+import { ErrorDisplay } from '../shared/ErrorDisplay';
 
 interface TransactionStepProps {
   paymentMethod: PaymentMethod;
@@ -68,10 +69,11 @@ export function TransactionStep({
         <p className="subscrypts-transaction-message">{getStateMessage()}</p>
 
         {error && (
-          <div className="subscrypts-error-box">
-            <p className="subscrypts-error-title">Error</p>
-            <p className="subscrypts-error-message">{error.message}</p>
-          </div>
+          <ErrorDisplay
+            error={error}
+            compact={true}
+            onRetry={isError ? onExecute : undefined}
+          />
         )}
 
         {subscriptionId && (

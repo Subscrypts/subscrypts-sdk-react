@@ -17,3 +17,13 @@ export * from './pricing';
 // Shared components
 export { LoadingSpinner } from './shared/LoadingSpinner';
 export { Modal } from './shared/Modal';
+export { ErrorDisplay } from './shared/ErrorDisplay';
+export type { ErrorDisplayProps } from './shared/ErrorDisplay';
+export { NetworkSwitchPrompt } from './shared/NetworkSwitchPrompt';
+export type { NetworkSwitchPromptProps } from './shared/NetworkSwitchPrompt';
+export { SubscryptsErrorBoundary } from './shared/SubscryptsErrorBoundary';
+export type { SubscryptsErrorBoundaryProps } from './shared/SubscryptsErrorBoundary';
+
+// Wallet components
+export { ConnectWalletModal } from './wallet/ConnectWalletModal';
+export type { ConnectWalletModalProps } from './wallet/ConnectWalletModal';

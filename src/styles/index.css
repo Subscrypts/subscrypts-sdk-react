@@ -466,3 +466,211 @@
   color: var(--subscrypts-color-text-secondary);
   margin-bottom: var(--subscrypts-spacing-lg);
 }
+
+/* ============================================================
+   v1.1.0 Components
+   ============================================================ */
+
+/* ErrorDisplay Component */
+.subscrypts-error-display {
+  text-align: center;
+  padding: var(--subscrypts-spacing-lg);
+  border-radius: var(--subscrypts-border-radius-lg);
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+}
+
+.subscrypts-error-display-compact {
+  text-align: left;
+  padding: var(--subscrypts-spacing-sm) var(--subscrypts-spacing-md);
+  border-radius: var(--subscrypts-border-radius);
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+}
+
+.subscrypts-error-display-compact .subscrypts-error-display-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--subscrypts-spacing-sm);
+}
+
+.subscrypts-error-display-icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto var(--subscrypts-spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  border-radius: 50%;
+  background-color: var(--subscrypts-color-error);
+  color: white;
+  font-weight: 700;
+}
+
+.subscrypts-error-display-title {
+  font-size: var(--subscrypts-font-size-lg);
+  font-weight: 600;
+  color: #991B1B;
+  margin: 0 0 var(--subscrypts-spacing-xs);
+}
+
+.subscrypts-error-display-message {
+  font-size: var(--subscrypts-font-size-sm);
+  color: #991B1B;
+  margin: 0 0 var(--subscrypts-spacing-xs);
+}
+
+.subscrypts-error-display-suggestion {
+  font-size: var(--subscrypts-font-size-sm);
+  color: var(--subscrypts-color-text-secondary);
+  margin: 0 0 var(--subscrypts-spacing-md);
+}
+
+.subscrypts-error-display-actions {
+  display: flex;
+  gap: var(--subscrypts-spacing-sm);
+  justify-content: center;
+  margin-top: var(--subscrypts-spacing-md);
+}
+
+/* NetworkSwitchPrompt Component */
+.subscrypts-network-prompt {
+  display: flex;
+  align-items: center;
+  gap: var(--subscrypts-spacing-md);
+  padding: var(--subscrypts-spacing-md);
+  border-radius: var(--subscrypts-border-radius-lg);
+  background-color: #FFFBEB;
+  border: 1px solid #FDE68A;
+}
+
+.subscrypts-network-prompt-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.subscrypts-network-prompt-content {
+  flex: 1;
+}
+
+.subscrypts-network-prompt-title {
+  font-size: var(--subscrypts-font-size-base);
+  font-weight: 600;
+  color: #92400E;
+  margin: 0 0 var(--subscrypts-spacing-xs);
+}
+
+.subscrypts-network-prompt-message {
+  font-size: var(--subscrypts-font-size-sm);
+  color: #92400E;
+  margin: 0;
+}
+
+.subscrypts-network-prompt-actions {
+  display: flex;
+  gap: var(--subscrypts-spacing-sm);
+  flex-shrink: 0;
+}
+
+/* SubscryptsErrorBoundary Fallback */
+.subscrypts-error-boundary-fallback {
+  text-align: center;
+  padding: var(--subscrypts-spacing-xl);
+  border-radius: var(--subscrypts-border-radius-lg);
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+}
+
+.subscrypts-error-boundary-icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--subscrypts-spacing-md);
+}
+
+.subscrypts-error-boundary-title {
+  font-size: var(--subscrypts-font-size-xl);
+  font-weight: 600;
+  color: #991B1B;
+  margin: 0 0 var(--subscrypts-spacing-sm);
+}
+
+.subscrypts-error-boundary-message {
+  font-size: var(--subscrypts-font-size-sm);
+  color: #991B1B;
+  margin: 0 0 var(--subscrypts-spacing-lg);
+}
+
+/* ConnectWalletModal Component */
+.subscrypts-connect-wallet {
+  min-width: 0;
+}
+
+.subscrypts-connect-wallet-empty {
+  text-align: center;
+  padding: var(--subscrypts-spacing-lg);
+  color: var(--subscrypts-color-text-secondary);
+}
+
+.subscrypts-connect-wallet-empty p {
+  margin: 0 0 var(--subscrypts-spacing-sm);
+}
+
+.subscrypts-connect-wallet-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--subscrypts-spacing-sm);
+}
+
+.subscrypts-connect-wallet-option {
+  display: flex;
+  align-items: center;
+  gap: var(--subscrypts-spacing-md);
+  width: 100%;
+  padding: var(--subscrypts-spacing-md);
+  border: 1px solid var(--subscrypts-color-border);
+  border-radius: var(--subscrypts-border-radius-lg);
+  background-color: var(--subscrypts-color-background);
+  color: var(--subscrypts-color-text-primary);
+  cursor: pointer;
+  transition: all var(--subscrypts-transition-base);
+  font-size: var(--subscrypts-font-size-base);
+  font-weight: 500;
+  text-align: left;
+}
+
+.subscrypts-connect-wallet-option:hover:not(:disabled) {
+  border-color: var(--subscrypts-color-primary);
+  background-color: var(--subscrypts-color-background-secondary);
+}
+
+.subscrypts-connect-wallet-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.subscrypts-connect-wallet-option-loading {
+  border-color: var(--subscrypts-color-primary);
+}
+
+.subscrypts-connect-wallet-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--subscrypts-border-radius);
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.subscrypts-connect-wallet-name {
+  flex: 1;
+}
+
+.subscrypts-connect-wallet-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--subscrypts-color-border);
+  border-top-color: var(--subscrypts-color-primary);
+  border-radius: 50%;
+  animation: subscrypts-spin 0.6s linear infinite;
+  flex-shrink: 0;
+}

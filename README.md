@@ -78,9 +78,16 @@ Automatically protect routes and components based on subscription status.
 ### 💳 **Dual Payment Support**
 Accept payments in both SUBS tokens (native) and USDC (with auto-swap).
 
-### 🎭 **Two Wallet Modes**
-- **Internal Mode**: Built-in wallet connection (MetaMask, WalletConnect)
+### 🎭 **Three Wallet Modes**
+- **Internal Mode**: Built-in wallet connection (MetaMask, browser wallets)
 - **External Mode**: Integrate with existing Wagmi/RainbowKit setups
+- **Connector Mode**: Pluggable wallet architecture for custom providers (Privy, Web3Auth, etc.)
+
+### 🔄 **Session Persistence**
+Wallet connections are remembered across page reloads - no popup on return visits.
+
+### 🛡️ **Error Recovery**
+Human-readable error messages with retry actions for blockchain errors.
 
 ### 📱 **Mobile Responsive**
 All components work perfectly on desktop and mobile devices.
@@ -280,13 +287,13 @@ Subscriptions can be:
 
 ### Wallet Modes
 
-**Internal Mode** (Easier):
+**Internal Mode** (Easiest):
 ```tsx
 <SubscryptsProvider enableWalletManagement={true}>
 ```
 SDK handles wallet connection for you using browser extensions (MetaMask, etc.)
 
-**External Mode** (Advanced):
+**External Mode** (Wagmi/RainbowKit):
 ```tsx
 <SubscryptsProvider
   enableWalletManagement={false}
@@ -294,6 +301,14 @@ SDK handles wallet connection for you using browser extensions (MetaMask, etc.)
 >
 ```
 Use when you already have wallet management (Wagmi, RainbowKit, etc.)
+
+**Connector Mode** (Custom Providers):
+```tsx
+import { InjectedConnector } from '@subscrypts/react-sdk';
+
+<SubscryptsProvider connectors={[new InjectedConnector(), myPrivyConnector]}>
+```
+Pluggable architecture - implement the `WalletConnector` interface for any provider.
 
 ---
 
@@ -565,9 +580,10 @@ function PricingPage() {
 
 | Prop | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
-| `enableWalletManagement` | `boolean` | No | `false` | Enable built-in wallet connection |
-| `defaultNetwork` | `number` | No | `42161` | Arbitrum network (42161=Arbitrum One mainnet) |
-| `externalProvider` | `Signer` | No | - | Use external wallet (Wagmi/RainbowKit) |
+| `enableWalletManagement` | `boolean` | No | `true` | Enable built-in wallet connection |
+| `externalProvider` | `ExternalWalletConfig` | No | - | Use external wallet (Wagmi/RainbowKit) |
+| `connectors` | `WalletConnector[]` | No | - | Custom wallet connectors (overrides enableWalletManagement) |
+| `persistSession` | `boolean` | No | `true` | Remember wallet across page reloads |
 | `onAccountChange` | `(newAddr, oldAddr) => void` | No | - | Callback when wallet account changes |
 | `onChainChange` | `(newChainId, oldChainId) => void` | No | - | Callback when network changes |
 | `debug` | `'silent' \| 'info' \| 'debug'` | No | `'info'` | Logging level |
@@ -580,25 +596,33 @@ function PricingPage() {
 **Protect content** based on subscription status.
 
 ```tsx
-<SubscriptionGuard
-  planId="1"
-  fallbackUrl="/subscribe"
-  loadingComponent={<Spinner />}
-  onAccessDenied={() => console.log('Access denied!')}
->
+// Single plan
+<SubscriptionGuard planId="1" fallbackUrl="/subscribe">
   <PremiumContent />
+</SubscriptionGuard>
+
+// Multi-plan: any of these grants access
+<SubscriptionGuard planIds={['1', '2', '3']}>
+  <PremiumContent />
+</SubscriptionGuard>
+
+// Multi-plan: require ALL plans
+<SubscriptionGuard planIds={['1', '2']} requireAll>
+  <BundleContent />
 </SubscriptionGuard>
 ```
 
 **Props:**
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `planId` | `string` | Yes | The plan ID to check access for |
-| `fallbackUrl` | `string` | No | Redirect URL when subscription is inactive |
-| `loadingComponent` | `ReactNode` | No | Custom loading indicator |
-| `onAccessDenied` | `() => void` | No | Callback when access is denied |
-| `children` | `ReactNode` | Yes | Content to protect |
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `planId` | `string` | No | - | Single plan ID to check |
+| `planIds` | `string[]` | No | - | Multiple plan IDs to check |
+| `requireAll` | `boolean` | No | `false` | Require ALL plans (true) or ANY plan (false) |
+| `fallbackUrl` | `string` | No | - | Redirect URL when subscription is inactive |
+| `loadingComponent` | `ReactNode` | No | - | Custom loading indicator |
+| `onAccessDenied` | `() => void` | No | - | Callback when access is denied |
+| `children` | `ReactNode` | Yes | - | Content to protect |
 
 ---
 
@@ -721,6 +745,116 @@ const [isOpen, setIsOpen] = useState(false);
 
 ---
 
+#### `<ErrorDisplay>`
+
+**Human-readable error messages** for blockchain errors with retry support.
+
+```tsx
+import { ErrorDisplay } from '@subscrypts/react-sdk';
+
+<ErrorDisplay
+  error={transactionError}
+  onRetry={() => retryTransaction()}
+  onDismiss={() => clearError()}
+/>
+
+// Compact variant for inline use
+<ErrorDisplay error={error} compact />
+```
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `error` | `Error \| null` | Yes | - | Error to display (renders nothing if null) |
+| `onRetry` | `() => void` | No | - | Retry callback (shows retry button if provided) |
+| `onDismiss` | `() => void` | No | - | Dismiss callback (shows dismiss button if provided) |
+| `compact` | `boolean` | No | `false` | Compact inline display |
+| `className` | `string` | No | - | Additional CSS class |
+
+---
+
+#### `<NetworkSwitchPrompt>`
+
+**Prompt users to switch** to Arbitrum One when on the wrong network.
+
+```tsx
+import { NetworkSwitchPrompt } from '@subscrypts/react-sdk';
+
+<NetworkSwitchPrompt
+  currentChainId={chainId}
+  onSwitch={() => switchToArbitrum()}
+/>
+```
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `currentChainId` | `number \| null` | Yes | - | User's current chain ID |
+| `onSwitch` | `() => void` | Yes | - | Callback to trigger network switch |
+| `onDismiss` | `() => void` | No | - | Dismiss callback |
+| `className` | `string` | No | - | Additional CSS class |
+
+---
+
+#### `<SubscryptsErrorBoundary>`
+
+**Catch and display React errors** with reset capability.
+
+```tsx
+import { SubscryptsErrorBoundary } from '@subscrypts/react-sdk';
+
+<SubscryptsErrorBoundary
+  onError={(error) => logToService(error)}
+  fallback={(error, reset) => (
+    <div>
+      <p>Something went wrong: {error.message}</p>
+      <button onClick={reset}>Try Again</button>
+    </div>
+  )}
+>
+  <YourComponents />
+</SubscryptsErrorBoundary>
+```
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `children` | `ReactNode` | Yes | - | Components to protect |
+| `fallback` | `ReactNode \| (error, reset) => ReactNode` | No | Default error UI | Custom error display |
+| `onError` | `(error: Error) => void` | No | - | Error logging callback |
+
+---
+
+#### `<ConnectWalletModal>`
+
+**Wallet selection modal** that lists available connectors.
+
+```tsx
+import { ConnectWalletModal } from '@subscrypts/react-sdk';
+
+<ConnectWalletModal
+  isOpen={showWalletModal}
+  onClose={() => setShowWalletModal(false)}
+  connectors={connectors}
+  onConnect={connectWith}
+/>
+```
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `isOpen` | `boolean` | Yes | - | Modal visibility |
+| `onClose` | `() => void` | Yes | - | Close callback |
+| `connectors` | `WalletConnector[]` | Yes | - | Available wallet connectors |
+| `onConnect` | `(connectorId: string) => Promise<void>` | Yes | - | Connect handler |
+| `className` | `string` | No | - | Additional CSS class |
+
+---
+
 ### Hooks
 
 #### `useSubscriptionStatus`
@@ -805,7 +939,7 @@ const handleSubscribe = async () => {
 
 #### `useWallet`
 
-**Access wallet connection state.**
+**Access wallet connection state, actions, and connector information.**
 
 ```tsx
 const {
@@ -813,7 +947,10 @@ const {
   address,
   chainId,
   connect,
-  disconnect
+  disconnect,
+  connectors,
+  activeConnector,
+  connectWith
 } = useWallet();
 
 if (!isConnected) {
@@ -825,11 +962,15 @@ if (!isConnected) {
 
 ```typescript
 {
-  isConnected: boolean;             // Wallet connected
-  address: string | null;           // User's wallet address
-  chainId: number | null;           // Connected network ID
-  connect?: () => Promise<void>;    // Connect wallet (internal mode only)
-  disconnect?: () => Promise<void>; // Disconnect wallet (internal mode only)
+  isConnected: boolean;                      // Wallet connected
+  address: string | null;                    // User's wallet address
+  chainId: number | null;                    // Connected network ID
+  connect?: () => Promise<void>;             // Connect wallet
+  disconnect?: () => Promise<void>;          // Disconnect wallet
+  switchNetwork: (chainId: number) => Promise<void>; // Switch network
+  connectors: WalletConnector[];             // Available wallet connectors
+  activeConnector: WalletConnector | null;   // Currently active connector
+  connectWith: (connectorId: string) => Promise<void>; // Connect with specific connector
 }
 ```
 
@@ -1028,6 +1169,32 @@ useEffect(() => {
 
 ### Error Handling
 
+**Option 1: Use `getErrorMessage` for user-friendly error strings:**
+
+```tsx
+import { getErrorMessage } from '@subscrypts/react-sdk';
+
+try {
+  await subscribe({ /* ... */ });
+} catch (error) {
+  const errorInfo = getErrorMessage(error);
+  // errorInfo.title:      "Transaction Rejected"
+  // errorInfo.message:    "You rejected the transaction in your wallet."
+  // errorInfo.suggestion: "Please try again and confirm the transaction."
+  // errorInfo.isRetryable: true
+}
+```
+
+**Option 2: Use `ErrorDisplay` component for automatic error rendering:**
+
+```tsx
+import { ErrorDisplay } from '@subscrypts/react-sdk';
+
+<ErrorDisplay error={txError} onRetry={retryTransaction} />
+```
+
+**Option 3: Catch specific error classes:**
+
 ```tsx
 import {
   InsufficientBalanceError,
@@ -1035,21 +1202,35 @@ import {
   TransactionError
 } from '@subscrypts/react-sdk';
 
-const { subscribe } = useSubscribe();
-
-const handleSubscribe = async () => {
-  try {
-    await subscribe({ /* ... */ });
-  } catch (error) {
-    if (error instanceof InsufficientBalanceError) {
-      alert('Insufficient balance! Please add funds.');
-    } else if (error instanceof NetworkError) {
-      alert('Wrong network! Please switch to Arbitrum.');
-    } else if (error instanceof TransactionError) {
-      alert('Transaction failed: ' + error.message);
-    }
+try {
+  await subscribe({ /* ... */ });
+} catch (error) {
+  if (error instanceof InsufficientBalanceError) {
+    alert('Insufficient balance! Please add funds.');
+  } else if (error instanceof NetworkError) {
+    alert('Wrong network! Please switch to Arbitrum.');
+  } else if (error instanceof TransactionError) {
+    alert('Transaction failed: ' + error.message);
   }
-};
+}
+```
+
+### Subscription Status Resolver
+
+A pure function for normalizing subscription states. Works in React components, Node.js scripts, AI agents, and anywhere else:
+
+```tsx
+import { resolveSubscriptionStatus } from '@subscrypts/react-sdk';
+
+const status = resolveSubscriptionStatus({ subscription });
+
+console.log(status.state);          // 'active' | 'expired' | 'expiring-soon' | 'cancelled' | 'not-found'
+console.log(status.isActive);       // true/false
+console.log(status.daysUntilExpiry); // number | null
+
+if (status.state === 'expiring-soon') {
+  showRenewalReminder();
+}
 ```
 
 ---

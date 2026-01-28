@@ -5,6 +5,7 @@
 import { createContext, useContext } from 'react';
 import { BrowserProvider, Signer, Contract } from 'ethers';
 import { NetworkConfig, WalletState } from '../types';
+import type { WalletConnector, ConnectorId } from '../wallet/types';
 
 /**
  * Context value type
@@ -32,6 +33,11 @@ export interface SubscryptsContextValue {
   // Actions (only available if internal wallet management is enabled)
   connect?: () => Promise<void>;
   disconnect?: () => Promise<void>;
+
+  // Connector architecture
+  connectors: WalletConnector[];
+  activeConnector: WalletConnector | null;
+  connectWith: (connectorId: ConnectorId) => Promise<void>;
 }
 
 /**

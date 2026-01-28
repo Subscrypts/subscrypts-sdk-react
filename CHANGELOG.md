@@ -2,6 +2,48 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-01-27
+
+### Added
+- **Better Error Recovery (F6)** - Human-readable blockchain error messages with retry capabilities:
+  - `ErrorDisplay` component - Context-aware error display with compact/full modes
+  - `NetworkSwitchPrompt` component - One-click switch to Arbitrum when on wrong network
+  - `SubscryptsErrorBoundary` component - React error boundary for SDK components
+  - `getErrorMessage()` / `getErrorCode()` utilities - Map ethers.js v6 error codes to user-friendly messages
+  - `ERROR_CODE_MAP` - Covers ACTION_REJECTED, INSUFFICIENT_FUNDS, CALL_EXCEPTION, NETWORK_ERROR, TIMEOUT, and more
+  - `TransactionStep` checkout component now uses `ErrorDisplay` for better error UX
+- **Subscription Status Resolver** - Pure function for normalizing subscription states:
+  - `resolveSubscriptionStatus()` - Returns state (active/expired/expiring-soon/cancelled/not-found) with computed fields
+  - Usable in React components, Node.js scripts, AI agents, and automation
+- **Multi-Plan SubscriptionGuard** - Gate content by multiple subscription plans:
+  - `planIds` prop - Check multiple plans at once
+  - `requireAll` prop - Control any-of (default) vs all-of access logic
+  - Full backward compatibility with existing `planId` prop
+- **Wallet Connector Architecture (F1/F4)** - Pluggable wallet provider system:
+  - `WalletConnector` interface - Implement to create custom connectors (Privy, WalletConnect, Web3Auth, etc.)
+  - `InjectedConnector` - Built-in connector for MetaMask and browser wallets
+  - `ExternalConnector` - Wraps externally-managed providers (Wagmi/RainbowKit)
+  - `ConnectWalletModal` component - Lists available connectors with connection UI
+  - `connectWith(connectorId)` - Connect with a specific connector programmatically
+  - `connectors` and `activeConnector` exposed via `useWallet()` hook
+  - Three usage patterns fully supported:
+    1. `enableWalletManagement={true}` (unchanged - auto-creates InjectedConnector)
+    2. `externalProvider={...}` (unchanged - auto-creates ExternalConnector)
+    3. `connectors={[...]}` (new - explicit connector list)
+- **Session Persistence (F5)** - Remember wallet connections across page reloads:
+  - `persistSession` prop on `SubscryptsProvider` (default: true)
+  - Auto-reconnects silently on page load (no popup) via `connector.reconnect()`
+  - 7-day session expiry with stale detection
+  - Clears session on explicit disconnect
+  - `saveSession()`, `loadSession()`, `clearSession()`, `isSessionStale()` utilities
+
+### Changed
+- `SubscriptsProvider` refactored to support connector architecture while maintaining full backward compatibility
+- `SubscryptsContextValue` extended with `connectors`, `activeConnector`, `connectWith`
+- `UseWalletReturn` extended with `connectors`, `activeConnector`, `connectWith`
+- `SubscriptionGuardProps.planId` is now optional (was required)
+- Version bumped to 1.1.0
+
 ## [1.0.11] - 2025-01-27
 
 ### Added

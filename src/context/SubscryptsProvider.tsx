@@ -1,8 +1,13 @@
 /**
  * Main Subscrypts Provider Component
+ *
+ * Supports three usage patterns:
+ * 1. enableWalletManagement=true (default) → auto-creates InjectedConnector
+ * 2. externalProvider → auto-creates ExternalConnector
+ * 3. connectors=[...] → uses provided connectors directly
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Contract, Signer } from 'ethers';
 import { SubscryptsContext, SubscryptsContextValue } from './SubscryptsContext';
 import { SubscryptsProviderProps, WalletState } from '../types';
@@ -18,22 +23,31 @@ import { SUBSCRYPTS_ABI } from '../contract';
 import { WalletError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { VERSION } from '../index';
+import { WalletConnector, ConnectorId } from '../wallet/types';
+import { InjectedConnector } from '../wallet/InjectedConnector';
+import { ExternalConnector } from '../wallet/ExternalConnector';
+import { saveSession, loadSession, clearSession, isSessionStale } from '../wallet/sessionStore';
 
 /**
  * Subscrypts Provider Component
  *
  * @example
  * ```tsx
- * // Internal wallet management
+ * // Pattern 1: Internal wallet management (unchanged)
  * <SubscryptsProvider enableWalletManagement={true}>
  *   <App />
  * </SubscryptsProvider>
  *
- * // External wallet (Wagmi)
+ * // Pattern 2: External wallet / Wagmi (unchanged)
  * <SubscryptsProvider
  *   enableWalletManagement={false}
  *   externalProvider={{ provider, signer, address }}
  * >
+ *   <App />
+ * </SubscryptsProvider>
+ *
+ * // Pattern 3: Connector-based (new)
+ * <SubscryptsProvider connectors={[new InjectedConnector(), myPrivyConnector]}>
  *   <App />
  * </SubscryptsProvider>
  * ```
@@ -46,7 +60,9 @@ export function SubscryptsProvider({
   balanceRefreshInterval = DEFAULTS.BALANCE_REFRESH_INTERVAL,
   debug = 'info',
   onAccountChange,
-  onChainChange
+  onChainChange,
+  connectors: connectorsProp,
+  persistSession: persistSessionProp = true
 }: SubscryptsProviderProps) {
   const network = getNetworkConfig(networkName);
 
@@ -63,10 +79,29 @@ export function SubscryptsProvider({
         enableWalletManagement,
         network: networkName,
         balanceRefreshInterval,
-        debugLevel: debug
+        debugLevel: debug,
+        hasConnectors: !!connectorsProp,
+        persistSession: persistSessionProp
       });
     }
-  }, [debug, enableWalletManagement, networkName, balanceRefreshInterval]);
+  }, [debug, enableWalletManagement, networkName, balanceRefreshInterval, connectorsProp, persistSessionProp]);
+
+  // --- Determine connector mode ---
+  // If connectors prop is provided, use it directly.
+  // If enableWalletManagement=true (no connectors), auto-create InjectedConnector.
+  // If externalProvider is set, auto-create ExternalConnector.
+  const resolvedConnectors = useMemo<WalletConnector[]>(() => {
+    if (connectorsProp) return connectorsProp;
+    if (!enableWalletManagement && externalProvider) {
+      return [new ExternalConnector(externalProvider, network.chainId)];
+    }
+    if (enableWalletManagement) {
+      return [new InjectedConnector()];
+    }
+    return [];
+  }, [connectorsProp, enableWalletManagement, externalProvider, network.chainId]);
+
+  const useConnectorMode = !!connectorsProp;
 
   // Wallet state
   const [walletState, setWalletState] = useState<WalletState>({
@@ -90,8 +125,14 @@ export function SubscryptsProvider({
   const [subsBalance, setSubsBalance] = useState<bigint | null>(null);
   const [usdcBalance, setUsdcBalance] = useState<bigint | null>(null);
 
-  // Services
+  // Active connector
+  const [activeConnector, setActiveConnector] = useState<WalletConnector | null>(null);
+
+  // Legacy wallet service (for non-connector mode)
   const walletService = useMemo(() => new WalletService(), []);
+
+  // Track whether session reconnect has been attempted
+  const sessionReconnectAttempted = useRef(false);
 
   /**
    * Initialize contracts when signer changes
@@ -162,9 +203,110 @@ export function SubscryptsProvider({
   }, [walletState.isConnected, refreshBalances, balanceRefreshInterval]);
 
   /**
-   * Internal wallet connection handler
+   * Apply a ConnectResult to provider state
+   */
+  const applyConnectResult = useCallback((
+    connector: WalletConnector,
+    result: { provider: any; signer: Signer; address: string; chainId: number }
+  ) => {
+    setProvider(result.provider);
+    setSigner(result.signer);
+    setActiveConnector(connector);
+    setWalletState({
+      address: result.address,
+      chainId: result.chainId,
+      isConnected: true,
+      isConnecting: false,
+      error: null
+    });
+
+    if (persistSessionProp) {
+      saveSession(connector.id, result.address);
+    }
+
+    logger.info(`Wallet connected via ${connector.name}: ${result.address.slice(0, 6)}...${result.address.slice(-4)}`);
+    logger.debug('Wallet details:', { connector: connector.id, address: result.address, chainId: result.chainId });
+  }, [persistSessionProp]);
+
+  /**
+   * Reset wallet state (shared disconnect logic)
+   */
+  const resetWalletState = useCallback(() => {
+    setSigner(null);
+    setProvider(null);
+    setActiveConnector(null);
+    setWalletState({
+      address: null,
+      chainId: null,
+      isConnected: false,
+      isConnecting: false,
+      error: null
+    });
+    setSubsBalance(null);
+    setUsdcBalance(null);
+    clearSession();
+  }, []);
+
+  // ============================================================
+  // Connector-based methods
+  // ============================================================
+
+  /**
+   * Connect with a specific connector by ID
+   */
+  const connectWith = useCallback(async (connectorId: ConnectorId) => {
+    const connector = resolvedConnectors.find(c => c.id === connectorId);
+    if (!connector) {
+      throw new WalletError(`Connector "${connectorId}" not found`);
+    }
+
+    if (!connector.isAvailable()) {
+      throw new WalletError(`Connector "${connector.name}" is not available`);
+    }
+
+    setWalletState(prev => ({ ...prev, isConnecting: true, error: null }));
+
+    try {
+      const result = await connector.connect();
+
+      // Auto-switch to Arbitrum if on wrong network
+      if (result.chainId !== network.chainId && connector.switchNetwork) {
+        await connector.switchNetwork(network.chainId);
+        // Re-connect to get updated chain
+        const refreshed = await connector.connect();
+        applyConnectResult(connector, refreshed);
+      } else {
+        applyConnectResult(connector, result);
+      }
+    } catch (error) {
+      logger.error(`Connection via ${connector.name} failed:`, error);
+      setWalletState(prev => ({
+        ...prev,
+        isConnecting: false,
+        error: error as Error
+      }));
+      throw error;
+    }
+  }, [resolvedConnectors, network.chainId, applyConnectResult]);
+
+  // ============================================================
+  // Legacy methods (backward compatibility)
+  // ============================================================
+
+  /**
+   * Internal wallet connection handler (legacy)
    */
   const connect = useCallback(async () => {
+    // If in connector mode, connect with first available connector
+    if (useConnectorMode) {
+      const available = resolvedConnectors.find(c => c.isAvailable());
+      if (available) {
+        await connectWith(available.id);
+        return;
+      }
+      throw new WalletError('No available wallet connectors');
+    }
+
     if (!enableWalletManagement) {
       throw new WalletError('Internal wallet management is disabled');
     }
@@ -177,7 +319,6 @@ export function SubscryptsProvider({
       // Check if we're on the correct network
       if (result.chainId !== network.chainId) {
         await walletService.switchNetwork(network);
-        // Refresh after network switch
         const refreshedResult = await walletService.connect();
         result.chainId = refreshedResult.chainId;
       }
@@ -194,6 +335,10 @@ export function SubscryptsProvider({
         error: null
       });
 
+      if (persistSessionProp) {
+        saveSession('injected', result.address);
+      }
+
       logger.info(`Wallet connected: ${result.address.slice(0, 6)}...${result.address.slice(-4)}`);
       logger.debug('Wallet details:', { address: result.address, chainId: result.chainId });
     } catch (error) {
@@ -205,25 +350,26 @@ export function SubscryptsProvider({
       }));
       throw error;
     }
-  }, [enableWalletManagement, walletService, network]);
+  }, [useConnectorMode, resolvedConnectors, connectWith, enableWalletManagement, walletService, network, persistSessionProp]);
 
   /**
    * Disconnect wallet
    */
   const disconnect = useCallback(async () => {
     logger.info('Wallet disconnected');
-    setSigner(null);
-    setProvider(null);
-    setWalletState({
-      address: null,
-      chainId: null,
-      isConnected: false,
-      isConnecting: false,
-      error: null
-    });
-    setSubsBalance(null);
-    setUsdcBalance(null);
-  }, []);
+
+    // Disconnect active connector if any
+    if (activeConnector) {
+      try {
+        activeConnector.removeListeners?.();
+        await activeConnector.disconnect();
+      } catch {
+        // Ignore disconnect errors
+      }
+    }
+
+    resetWalletState();
+  }, [activeConnector, resetWalletState]);
 
   /**
    * Switch network
@@ -233,22 +379,120 @@ export function SubscryptsProvider({
       if (chainId !== 42161) {
         throw new Error('Only Arbitrum One (chain ID 42161) is supported');
       }
-      const targetNetwork = getNetworkConfig('arbitrum');
 
+      // Try connector's switchNetwork first
+      if (activeConnector?.switchNetwork) {
+        await activeConnector.switchNetwork(chainId);
+        // Reconnect to refresh state
+        const result = await activeConnector.connect();
+        applyConnectResult(activeConnector, result);
+        return;
+      }
+
+      // Legacy fallback
+      const targetNetwork = getNetworkConfig('arbitrum');
       await walletService.switchNetwork(targetNetwork);
 
-      // Refresh wallet state
       if (enableWalletManagement) {
         await connect();
       }
     },
-    [walletService, enableWalletManagement, connect]
+    [activeConnector, applyConnectResult, walletService, enableWalletManagement, connect]
   );
 
-  /**
-   * Setup external provider (Wagmi/RainbowKit)
-   */
+  // ============================================================
+  // Session persistence: auto-reconnect on mount
+  // ============================================================
+
   useEffect(() => {
+    if (sessionReconnectAttempted.current) return;
+    sessionReconnectAttempted.current = true;
+
+    if (!persistSessionProp) return;
+
+    const session = loadSession();
+    if (!session || isSessionStale(session)) {
+      clearSession();
+      return;
+    }
+
+    // Find the connector for this session
+    const connector = resolvedConnectors.find(c => c.id === session.connectorId);
+    if (!connector || !connector.isAvailable()) {
+      clearSession();
+      return;
+    }
+
+    // Silent reconnect (no popup)
+    if (connector.reconnect) {
+      connector.reconnect().then(result => {
+        if (result) {
+          applyConnectResult(connector, result);
+          logger.debug('Session restored via', connector.name);
+        } else {
+          clearSession();
+        }
+      }).catch(() => {
+        clearSession();
+      });
+    }
+  }, [persistSessionProp, resolvedConnectors, applyConnectResult]);
+
+  // ============================================================
+  // Connector event listeners
+  // ============================================================
+
+  useEffect(() => {
+    if (!activeConnector) return;
+
+    // Listen to account changes via connector
+    if (activeConnector.onAccountsChanged) {
+      activeConnector.onAccountsChanged((accounts) => {
+        if (accounts.length === 0) {
+          disconnect();
+        } else if (accounts[0] !== walletState.address) {
+          const oldAddress = walletState.address;
+          setWalletState(prev => ({ ...prev, address: accounts[0] }));
+
+          if (persistSessionProp) {
+            saveSession(activeConnector.id, accounts[0]);
+          }
+
+          if (onAccountChange && oldAddress) {
+            onAccountChange(accounts[0], oldAddress);
+          }
+        }
+      });
+    }
+
+    // Listen to chain changes via connector
+    if (activeConnector.onChainChanged) {
+      activeConnector.onChainChanged((newChainId) => {
+        const oldChainId = walletState.chainId;
+        setWalletState(prev => ({ ...prev, chainId: newChainId }));
+
+        if (onChainChange && oldChainId) {
+          onChainChange(newChainId, oldChainId);
+        }
+
+        if (newChainId !== network.chainId) {
+          switchNetwork(network.chainId).catch(console.error);
+        }
+      });
+    }
+
+    return () => {
+      activeConnector.removeListeners?.();
+    };
+  }, [activeConnector, disconnect, walletState.address, walletState.chainId, network.chainId, switchNetwork, onAccountChange, onChainChange, persistSessionProp]);
+
+  // ============================================================
+  // Legacy: external provider setup (non-connector mode)
+  // ============================================================
+
+  useEffect(() => {
+    if (useConnectorMode) return;
+
     if (!enableWalletManagement && externalProvider) {
       setProvider(externalProvider.provider);
       setSigner(externalProvider.signer);
@@ -260,13 +504,14 @@ export function SubscryptsProvider({
         error: null
       });
     }
-  }, [enableWalletManagement, externalProvider, network.chainId]);
+  }, [useConnectorMode, enableWalletManagement, externalProvider, network.chainId]);
 
-  /**
-   * Listen to wallet events (only for internal wallet management)
-   */
+  // ============================================================
+  // Legacy: wallet event listeners (non-connector mode)
+  // ============================================================
+
   useEffect(() => {
-    if (!enableWalletManagement) {
+    if (useConnectorMode || !enableWalletManagement || activeConnector) {
       return;
     }
 
@@ -277,7 +522,6 @@ export function SubscryptsProvider({
       } else if (accounts[0] !== walletState.address) {
         const oldAddress = walletState.address;
         setWalletState(prev => ({ ...prev, address: accounts[0] }));
-        // Call the callback if provided
         if (onAccountChange && oldAddress) {
           onAccountChange(accounts[0], oldAddress);
         }
@@ -290,12 +534,10 @@ export function SubscryptsProvider({
       const oldChainId = walletState.chainId;
       setWalletState(prev => ({ ...prev, chainId: newChainId }));
 
-      // Call the callback if provided
       if (onChainChange && oldChainId) {
         onChainChange(newChainId, oldChainId);
       }
 
-      // Auto-switch to correct network if wrong network
       if (newChainId !== network.chainId) {
         switchNetwork(network.chainId).catch(console.error);
       }
@@ -308,7 +550,7 @@ export function SubscryptsProvider({
       walletService.removeAccountsChangedListener(handleAccountsChanged);
       walletService.removeChainChangedListener(handleChainChanged);
     };
-  }, [enableWalletManagement, walletService, disconnect, walletState.address, walletState.chainId, network.chainId, switchNetwork, onAccountChange, onChainChange]);
+  }, [useConnectorMode, enableWalletManagement, activeConnector, walletService, disconnect, walletState.address, walletState.chainId, network.chainId, switchNetwork, onAccountChange, onChainChange]);
 
   /**
    * Context value
@@ -326,7 +568,10 @@ export function SubscryptsProvider({
       subsBalance,
       usdcBalance,
       refreshBalances,
-      ...(enableWalletManagement ? { connect, disconnect } : {})
+      connectors: resolvedConnectors,
+      activeConnector,
+      connectWith,
+      ...(enableWalletManagement || useConnectorMode ? { connect, disconnect } : {})
     }),
     [
       walletState,
@@ -340,7 +585,11 @@ export function SubscryptsProvider({
       subsBalance,
       usdcBalance,
       refreshBalances,
+      resolvedConnectors,
+      activeConnector,
+      connectWith,
       enableWalletManagement,
+      useConnectorMode,
       connect,
       disconnect
     ]

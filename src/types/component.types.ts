@@ -5,6 +5,7 @@
 import { ReactNode } from 'react';
 import { ExternalWalletConfig } from './wallet.types';
 import { Plan } from './subscription.types';
+import type { WalletConnector } from '../wallet/types';
 
 /**
  * SubscryptsProvider props
@@ -42,13 +43,43 @@ export interface SubscryptsProviderProps {
    * @param oldChainId - The previous chain ID
    */
   onChainChange?: (newChainId: number, oldChainId: number) => void;
+  /**
+   * Custom wallet connectors.
+   * When provided, the SDK uses the connector architecture instead of
+   * the internal WalletService. Overrides enableWalletManagement.
+   *
+   * @example
+   * ```tsx
+   * <SubscryptsProvider connectors={[new InjectedConnector(), myPrivyConnector]}>
+   * ```
+   */
+  connectors?: WalletConnector[];
+  /**
+   * Persist wallet session across page reloads using localStorage.
+   * When true, auto-reconnects silently on page load.
+   * @default true
+   */
+  persistSession?: boolean;
 }
 
 /**
  * SubscriptionGuard props
+ *
+ * Supports single-plan gating (planId) and multi-plan gating (planIds).
+ * When using planIds, set requireAll to control any-of vs all-of behavior.
  */
 export interface SubscriptionGuardProps {
-  planId: string;
+  /** Single plan ID to check (backward compatible) */
+  planId?: string;
+  /** Multiple plan IDs to check */
+  planIds?: string[];
+  /**
+   * When true, user must be subscribed to ALL plans in planIds.
+   * When false (default), user needs ANY one of the plans.
+   * Only applies when planIds is provided.
+   * @default false
+   */
+  requireAll?: boolean;
   /** URL to redirect to if subscription is inactive */
   fallbackUrl?: string;
   /** Custom loading component */
