@@ -9,3 +9,6 @@ export type { UsePlanReturn } from './usePlan';
 
 export { usePlans } from './usePlans';
 export type { UsePlansReturn } from './usePlans';
+
+export { usePlansByMerchant } from './usePlansByMerchant';
+export type { UsePlansByMerchantReturn } from './usePlansByMerchant';

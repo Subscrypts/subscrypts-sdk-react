@@ -99,3 +99,15 @@ export function shortenAddress(address: string, startChars: number = 6, endChars
 export function formatPercentage(value: number, decimals: number = 2): string {
   return `${value.toFixed(decimals)}%`;
 }
+
+/**
+ * Format a fiat (USD) price for display
+ */
+export function formatFiatPrice(amount: number, locale: string = 'en-US'): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
+}

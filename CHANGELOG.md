@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-01-28
+
+### Added
+- **Fiat Price Display (F2)** - Show USD-equivalent prices using on-chain oracle:
+  - `useSUBSPrice()` hook - Fetch current SUBS/USD price with auto-refresh (60s interval)
+  - `usePlanPrice(planId)` hook - Comprehensive price info: SUBS amount, USDC equivalent (via Uniswap), USD value, frequency label
+  - Handles both SUBS-denominated (currencyCode=0) and USD-denominated (currencyCode=1) plans
+  - `formatFiatPrice()` utility - Format USD amounts with locale support
+- **Plan Management (F7)** - Manage existing subscriptions:
+  - `useManageSubscription(subscriptionId)` hook - Cancel, toggle auto-renewal, update cycles, change attributes
+  - `ManageSubscriptionModal` component - Full management UI with subscription details
+  - `ConfirmDialog` component - Reusable confirmation dialog with danger variant
+  - CSS styles for manage modal, confirm dialog, and danger button
+- **Merchant Plan Query** - Fetch plans filtered by merchant address:
+  - `usePlansByMerchant(merchantAddress)` hook - Returns all plans created by a specific merchant
+- **Decision Helpers** - Pure utility functions for subscription decisions:
+  - `canAccess(subscription)` - Check if subscription grants active access
+  - `isPaymentDue(subscription)` - Check if payment is past due
+  - `shouldRenew(subscription)` - Check if subscription should be renewed (due + auto-renewing + cycles remaining)
+  - `getSubscriptionHealth(subscription)` - Comprehensive health summary combining all checks
+
 ## [1.1.0] - 2026-01-27
 
 ### Added

@@ -855,6 +855,69 @@ import { ConnectWalletModal } from '@subscrypts/react-sdk';
 
 ---
 
+#### `<ManageSubscriptionModal>`
+
+**Manage an existing subscription** with cancel, auto-renewal toggle, and cycle updates.
+
+```tsx
+import { ManageSubscriptionModal } from '@subscrypts/react-sdk';
+
+<ManageSubscriptionModal
+  isOpen={showManage}
+  onClose={() => setShowManage(false)}
+  subscriptionId="42"
+  subscription={subscriptionData}
+  onCancelled={() => refetchSubscriptions()}
+  onUpdated={() => refetchSubscriptions()}
+/>
+```
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `isOpen` | `boolean` | Yes | - | Modal visibility |
+| `onClose` | `() => void` | Yes | - | Close callback |
+| `subscriptionId` | `string` | Yes | - | Subscription ID to manage |
+| `subscription` | `Subscription` | No | - | Pre-loaded subscription data |
+| `onCancelled` | `() => void` | No | - | Called after successful cancellation |
+| `onUpdated` | `() => void` | No | - | Called after successful update |
+
+---
+
+#### `<ConfirmDialog>`
+
+**Reusable confirmation dialog** for destructive or important actions.
+
+```tsx
+import { ConfirmDialog } from '@subscrypts/react-sdk';
+
+<ConfirmDialog
+  isOpen={showConfirm}
+  title="Cancel Subscription?"
+  message="Your subscription will remain active until the end of the current period."
+  variant="danger"
+  confirmLabel="Cancel Subscription"
+  onConfirm={handleCancel}
+  onCancel={() => setShowConfirm(false)}
+/>
+```
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `isOpen` | `boolean` | Yes | - | Dialog visibility |
+| `title` | `string` | Yes | - | Dialog title |
+| `message` | `string` | Yes | - | Dialog message |
+| `confirmLabel` | `string` | No | `'Confirm'` | Confirm button text |
+| `cancelLabel` | `string` | No | `'Cancel'` | Cancel button text |
+| `variant` | `'danger' \| 'default'` | No | `'default'` | Visual variant (danger = red button) |
+| `onConfirm` | `() => void` | Yes | - | Confirm callback |
+| `onCancel` | `() => void` | Yes | - | Cancel callback |
+
+---
+
 ### Hooks
 
 #### `useSubscriptionStatus`
@@ -1049,6 +1112,131 @@ plans.forEach(plan => {
 
 ---
 
+#### `useSUBSPrice`
+
+**Fetch the current SUBS/USD price** from the on-chain oracle.
+
+```tsx
+const { priceUsd, isLoading, refetch } = useSUBSPrice();
+
+if (priceUsd) {
+  console.log(`1 SUBS = $${priceUsd.toFixed(4)}`);
+}
+```
+
+**Returns:**
+
+```typescript
+{
+  priceUsd: number | null;       // 1 SUBS = X USD
+  rawPrice: bigint | null;       // Raw 18-decimal value
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+```
+
+---
+
+#### `usePlanPrice`
+
+**Get comprehensive price info** for a plan (SUBS, USDC, USD).
+
+```tsx
+const { price, isLoading } = usePlanPrice('1');
+
+if (price) {
+  console.log(`${price.subsFormatted} SUBS / ${price.frequency}`);
+  if (price.usdValue) console.log(`≈ ${formatFiatPrice(price.usdValue)}`);
+}
+```
+
+**Returns:**
+
+```typescript
+{
+  price: {
+    subsAmount: bigint;           // Price in SUBS (18 decimals)
+    subsFormatted: string;        // e.g. "10.5000"
+    usdcAmount: bigint | null;    // USDC equivalent (6 decimals)
+    usdcFormatted: string | null; // e.g. "5.25"
+    usdValue: number | null;      // USD display value
+    frequency: string;            // "Monthly", "Weekly", etc.
+    isUsdDenominated: boolean;
+  } | null;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+```
+
+---
+
+#### `useManageSubscription`
+
+**Manage an existing subscription**: cancel, toggle auto-renewal, update cycles.
+
+```tsx
+const {
+  cancelSubscription,
+  toggleAutoRenew,
+  updateCycles,
+  isProcessing,
+  txState
+} = useManageSubscription('42');
+
+// Cancel
+await cancelSubscription();
+
+// Toggle auto-renewal
+await toggleAutoRenew(false);
+
+// Set remaining cycles
+await updateCycles(12);
+```
+
+**Returns:**
+
+```typescript
+{
+  cancelSubscription: () => Promise<void>;
+  toggleAutoRenew: (enabled: boolean) => Promise<void>;
+  updateCycles: (cycles: number) => Promise<void>;
+  updateAttributes: (attributes: string) => Promise<void>;
+  txState: TransactionState;
+  error: Error | null;
+  isProcessing: boolean;
+}
+```
+
+---
+
+#### `usePlansByMerchant`
+
+**Fetch all plans** created by a specific merchant address.
+
+```tsx
+const { plans, total, isLoading } = usePlansByMerchant('0x1234...');
+
+plans.forEach(plan => {
+  console.log(plan.description, plan.subscriberCount.toString());
+});
+```
+
+**Returns:**
+
+```typescript
+{
+  plans: Plan[];
+  total: number;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+```
+
+---
+
 #### `useSubscrypts`
 
 **Access full SDK context.** Advanced use cases only.
@@ -1101,6 +1289,32 @@ type TransactionState =
   | 'waiting_subscribe'
   | 'success'
   | 'error';
+```
+
+#### `PlanPriceInfo`
+
+```typescript
+interface PlanPriceInfo {
+  subsAmount: bigint;           // Price in SUBS (18 decimals)
+  subsFormatted: string;        // e.g. "10.5000"
+  usdcAmount: bigint | null;    // USDC equivalent (6 decimals)
+  usdcFormatted: string | null; // e.g. "5.25"
+  usdValue: number | null;      // USD display value
+  frequency: string;            // "Monthly", "Weekly", etc.
+  isUsdDenominated: boolean;    // Whether plan is USD-denominated
+}
+```
+
+#### `SubscriptionHealth`
+
+```typescript
+interface SubscriptionHealth {
+  state: SubscriptionState;      // 'active' | 'expired' | 'expiring-soon' | ...
+  isPaymentDue: boolean;
+  shouldRenew: boolean;
+  daysUntilExpiry: number | null;
+  cyclesRemaining: number;
+}
 ```
 
 ---
@@ -1231,6 +1445,44 @@ console.log(status.daysUntilExpiry); // number | null
 if (status.state === 'expiring-soon') {
   showRenewalReminder();
 }
+```
+
+---
+
+### Decision Helpers
+
+Pure utility functions for subscription decisions. No blockchain calls - operate on existing data. Usable in React components, Node.js scripts, AI agents, cron jobs, and automation:
+
+```tsx
+import {
+  canAccess,
+  isPaymentDue,
+  shouldRenew,
+  getSubscriptionHealth
+} from '@subscrypts/react-sdk';
+
+// Check if subscription grants access
+if (canAccess(subscription)) {
+  showPremiumContent();
+}
+
+// Check if payment is past due
+if (isPaymentDue(subscription)) {
+  triggerPaymentCollection();
+}
+
+// Check if subscription should auto-renew (due + auto-renewing + cycles remaining)
+if (shouldRenew(subscription)) {
+  processRenewalPayment();
+}
+
+// Get comprehensive health summary
+const health = getSubscriptionHealth(subscription);
+console.log(health.state);           // 'active' | 'expired' | 'expiring-soon' | ...
+console.log(health.isPaymentDue);    // false
+console.log(health.shouldRenew);     // false
+console.log(health.daysUntilExpiry); // 25
+console.log(health.cyclesRemaining); // 11
 ```
 
 ---

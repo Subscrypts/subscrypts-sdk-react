@@ -27,3 +27,6 @@ export type { SubscryptsErrorBoundaryProps } from './shared/SubscryptsErrorBound
 // Wallet components
 export { ConnectWalletModal } from './wallet/ConnectWalletModal';
 export type { ConnectWalletModalProps } from './wallet/ConnectWalletModal';
+
+// Subscription management components (v1.2.0)
+export * from './subscription';

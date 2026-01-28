@@ -674,3 +674,115 @@
   animation: subscrypts-spin 0.6s linear infinite;
   flex-shrink: 0;
 }
+
+/* =============================================
+   Confirm Dialog (v1.2.0)
+   ============================================= */
+
+.subscrypts-confirm-dialog {
+  padding: 0.5rem 0;
+}
+
+.subscrypts-confirm-dialog__message {
+  color: var(--subscrypts-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.subscrypts-confirm-dialog__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+/* Danger button variant */
+.subscrypts-btn-danger {
+  background-color: var(--subscrypts-color-error);
+  color: var(--subscrypts-text-inverse);
+  border: none;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--subscrypts-border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.subscrypts-btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.subscrypts-btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =============================================
+   Manage Subscription Modal (v1.2.0)
+   ============================================= */
+
+.subscrypts-manage-modal {
+  padding: 0.5rem 0;
+}
+
+.subscrypts-manage-modal__info {
+  background-color: var(--subscrypts-bg-secondary);
+  border-radius: var(--subscrypts-border-radius);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.subscrypts-manage-modal__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.subscrypts-manage-modal__row + .subscrypts-manage-modal__row {
+  border-top: 1px solid var(--subscrypts-color-border);
+}
+
+.subscrypts-manage-modal__label {
+  color: var(--subscrypts-text-secondary);
+  font-size: 0.875rem;
+}
+
+.subscrypts-manage-modal__value {
+  color: var(--subscrypts-text-primary);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.subscrypts-manage-modal__processing {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--subscrypts-bg-secondary);
+  border-radius: var(--subscrypts-border-radius);
+  margin-bottom: 1rem;
+  color: var(--subscrypts-text-secondary);
+  font-size: 0.875rem;
+}
+
+.subscrypts-manage-modal__success {
+  padding: 0.75rem 1rem;
+  background-color: #ecfdf5;
+  color: #065f46;
+  border-radius: var(--subscrypts-border-radius);
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.subscrypts-manage-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.subscrypts-manage-modal__actions .subscrypts-btn {
+  width: 100%;
+  text-align: center;
+}

@@ -16,3 +16,6 @@ export * from './wallet';
 
 // Plan hooks
 export * from './plans';
+
+// Pricing hooks (v1.2.0)
+export * from './pricing';

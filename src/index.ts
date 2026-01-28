@@ -34,7 +34,12 @@ export {
   useTokenBalance,
   useWallet,
   usePlan,
-  usePlans
+  usePlans,
+  // v1.2.0
+  useSUBSPrice,
+  usePlanPrice,
+  useManageSubscription,
+  usePlansByMerchant
 } from './hooks';
 export type {
   UseSubscriptionStatusReturn,
@@ -44,7 +49,13 @@ export type {
   TokenType,
   UseWalletReturn,
   UsePlanReturn,
-  UsePlansReturn
+  UsePlansReturn,
+  // v1.2.0
+  UseSUBSPriceReturn,
+  UsePlanPriceReturn,
+  PlanPriceInfo,
+  UseManageSubscriptionReturn,
+  UsePlansByMerchantReturn
 } from './hooks';
 
 // Components
@@ -59,7 +70,10 @@ export {
   ErrorDisplay,
   NetworkSwitchPrompt,
   SubscryptsErrorBoundary,
-  ConnectWalletModal
+  ConnectWalletModal,
+  // v1.2.0
+  ManageSubscriptionModal,
+  ConfirmDialog
 } from './components';
 export type {
   PlanCardProps,
@@ -69,7 +83,10 @@ export type {
   ErrorDisplayProps,
   NetworkSwitchPromptProps,
   SubscryptsErrorBoundaryProps,
-  ConnectWalletModalProps
+  ConnectWalletModalProps,
+  // v1.2.0
+  ManageSubscriptionModalProps,
+  ConfirmDialogProps
 } from './components';
 
 // Types
@@ -148,13 +165,24 @@ export {
   ERROR_CODE_MAP,
 
   // Subscription status resolver (v1.1.0)
-  resolveSubscriptionStatus
+  resolveSubscriptionStatus,
+
+  // Fiat price formatter (v1.2.0)
+  formatFiatPrice,
+
+  // Decision helpers (v1.2.0)
+  canAccess,
+  isPaymentDue,
+  shouldRenew,
+  getSubscriptionHealth
 } from './utils';
 export type {
   ErrorMessageConfig,
   SubscriptionState,
   ResolvedStatus,
-  ResolveStatusInput
+  ResolveStatusInput,
+  // v1.2.0
+  SubscriptionHealth
 } from './utils';
 
 // PERMIT2 utilities
@@ -176,4 +204,4 @@ export type { WalletSession } from './wallet';
 export { logger, type LogLevel, type LoggerConfig } from './utils/logger';
 
 // Version
-export const VERSION = '1.1.0';
+export const VERSION = '1.2.0';
