@@ -786,3 +786,198 @@
   width: 100%;
   text-align: center;
 }
+
+/* =============================================
+   Subscription Card (v1.3.0)
+   ============================================= */
+
+.subscrypts-subscription-card {
+  background-color: var(--subscrypts-bg-primary);
+  border: 1px solid var(--subscrypts-color-border);
+  border-radius: var(--subscrypts-border-radius);
+  padding: 1.25rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.subscrypts-subscription-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.subscrypts-subscription-card__header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.subscrypts-subscription-card__badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.subscrypts-subscription-card__badge--active {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.subscrypts-subscription-card__badge--expiring {
+  background-color: #fed7aa;
+  color: #92400e;
+}
+
+.subscrypts-subscription-card__badge--expired {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.subscrypts-subscription-card__badge--cancelled {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
+.subscrypts-subscription-card__content {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--subscrypts-color-border);
+}
+
+.subscrypts-subscription-card__amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--subscrypts-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.subscrypts-subscription-card__frequency {
+  font-size: 0.875rem;
+  color: var(--subscrypts-text-secondary);
+}
+
+.subscrypts-subscription-card__details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.subscrypts-subscription-card__detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.subscrypts-subscription-card__detail-label {
+  font-size: 0.875rem;
+  color: var(--subscrypts-text-secondary);
+}
+
+.subscrypts-subscription-card__detail-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--subscrypts-text-primary);
+}
+
+.subscrypts-subscription-card__actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.subscrypts-subscription-card__actions .subscrypts-btn {
+  flex: 1;
+}
+
+/* =============================================
+   Subscription Dashboard (v1.3.0)
+   ============================================= */
+
+.subscrypts-subscription-dashboard {
+  width: 100%;
+}
+
+.subscrypts-subscription-dashboard__header {
+  margin-bottom: 1.5rem;
+}
+
+.subscrypts-subscription-dashboard__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--subscrypts-text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.subscrypts-subscription-dashboard__subtitle {
+  font-size: 0.875rem;
+  color: var(--subscrypts-text-secondary);
+  margin: 0;
+}
+
+.subscrypts-subscription-dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.subscrypts-subscription-dashboard__pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+}
+
+.subscrypts-subscription-dashboard__pagination-btn {
+  min-width: 100px;
+}
+
+.subscrypts-subscription-dashboard__pagination-info {
+  font-size: 0.875rem;
+  color: var(--subscrypts-text-secondary);
+  font-weight: 500;
+}
+
+.subscrypts-subscription-dashboard__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
+
+.subscrypts-subscription-dashboard__loading p {
+  margin-top: 1rem;
+  color: var(--subscrypts-text-secondary);
+}
+
+.subscrypts-subscription-dashboard__error {
+  padding: 1.5rem;
+}
+
+.subscrypts-subscription-dashboard__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background-color: var(--subscrypts-bg-secondary);
+  border-radius: var(--subscrypts-border-radius);
+}
+
+.subscrypts-subscription-dashboard__empty-text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--subscrypts-text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.subscrypts-subscription-dashboard__empty-subtext {
+  font-size: 0.875rem;
+  color: var(--subscrypts-text-secondary);
+  margin: 0;
+}

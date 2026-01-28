@@ -60,7 +60,7 @@ This React SDK makes it incredibly easy to:
 Drop-in React components that work out of the box - no blockchain expertise required.
 
 ```tsx
-<SubscriptionGuard planId="premium">
+<SubscriptionGuard planId="123">
   <YourPremiumContent />
 </SubscriptionGuard>
 ```
@@ -918,6 +918,63 @@ import { ConfirmDialog } from '@subscrypts/react-sdk';
 
 ---
 
+#### `<SubscriptionCard>`
+
+**Display subscription details** with status badge and manage button.
+
+```tsx
+import { SubscriptionCard } from '@subscrypts/react-sdk';
+
+<SubscriptionCard
+  subscription={subscription}
+  showManageButton={true}
+  onCancelled={() => refetchSubscriptions()}
+/>
+```
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `subscription` | `Subscription` | Yes | - | Subscription to display |
+| `showManageButton` | `boolean` | No | `true` | Show manage button |
+| `showFiatPrice` | `boolean` | No | `false` | Show fiat price |
+| `onManage` | `(id: string) => void` | No | - | Custom manage handler |
+| `onCancelled` | `() => void` | No | - | Called after cancellation |
+| `onUpdated` | `() => void` | No | - | Called after update |
+| `className` | `string` | No | - | Additional CSS class |
+
+---
+
+#### `<SubscriptionDashboard>`
+
+**Complete subscription management dashboard** with pagination.
+
+```tsx
+import { SubscriptionDashboard } from '@subscrypts/react-sdk';
+
+<SubscriptionDashboard
+  pageSize={10}
+  showFiatPrices={true}
+  onSubscriptionCancelled={(id) => console.log('Cancelled:', id)}
+/>
+```
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `address` | `string` | No | Connected wallet | Address to fetch subscriptions for |
+| `pageSize` | `number` | No | `10` | Subscriptions per page |
+| `showFiatPrices` | `boolean` | No | `false` | Show fiat prices on cards |
+| `emptyComponent` | `React.ReactNode` | No | Default message | Custom empty state |
+| `loadingComponent` | `React.ReactNode` | No | Spinner | Custom loading state |
+| `className` | `string` | No | - | Additional CSS class |
+| `onSubscriptionCancelled` | `(id: string) => void` | No | - | Called after cancellation |
+| `onSubscriptionUpdated` | `(id: string) => void` | No | - | Called after update |
+
+---
+
 ### Hooks
 
 #### `useSubscriptionStatus`
@@ -1232,6 +1289,80 @@ plans.forEach(plan => {
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
+}
+```
+
+---
+
+#### `useMySubscriptions`
+
+**Fetch paginated subscriptions** for the connected wallet.
+
+```tsx
+const {
+  subscriptions,
+  page,
+  hasMore,
+  nextPage,
+  prevPage,
+  isLoading
+} = useMySubscriptions();
+
+return (
+  <div>
+    {subscriptions.map(sub => (
+      <SubscriptionCard key={sub.id} subscription={sub} />
+    ))}
+    <button onClick={prevPage} disabled={page === 1}>Previous</button>
+    <button onClick={nextPage} disabled={!hasMore}>Next</button>
+  </div>
+);
+```
+
+**Returns:**
+
+```typescript
+{
+  subscriptions: Subscription[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+  isLoading: boolean;
+  error: Error | null;
+  nextPage: () => void;
+  prevPage: () => void;
+  refetch: () => Promise<void>;
+}
+```
+
+---
+
+#### `useSubscryptsEvents`
+
+**Subscribe to real-time protocol events** for live updates.
+
+```tsx
+useSubscryptsEvents({
+  onSubscriptionCreated: (event) => {
+    console.log('New subscription:', event.subscriptionId);
+    refetchDashboard();
+  },
+  onSubscriptionPaid: (event) => {
+    console.log('Payment made:', event.amount);
+  },
+  onSubscriptionStopped: (event) => {
+    console.log('Subscription stopped:', event.subscriptionId);
+  }
+});
+```
+
+**Returns:**
+
+```typescript
+{
+  isListening: boolean;
+  error: Error | null;
 }
 ```
 

@@ -39,7 +39,10 @@ export {
   useSUBSPrice,
   usePlanPrice,
   useManageSubscription,
-  usePlansByMerchant
+  usePlansByMerchant,
+  // v1.3.0
+  useMySubscriptions,
+  useSubscryptsEvents
 } from './hooks';
 export type {
   UseSubscriptionStatusReturn,
@@ -55,7 +58,11 @@ export type {
   UsePlanPriceReturn,
   PlanPriceInfo,
   UseManageSubscriptionReturn,
-  UsePlansByMerchantReturn
+  UsePlansByMerchantReturn,
+  // v1.3.0
+  UseMySubscriptionsReturn,
+  SubscryptsEventCallbacks,
+  UseSubscryptsEventsReturn
 } from './hooks';
 
 // Components
@@ -73,7 +80,10 @@ export {
   ConnectWalletModal,
   // v1.2.0
   ManageSubscriptionModal,
-  ConfirmDialog
+  ConfirmDialog,
+  // v1.3.0
+  SubscriptionCard,
+  SubscriptionDashboard
 } from './components';
 export type {
   PlanCardProps,
@@ -86,7 +96,10 @@ export type {
   ConnectWalletModalProps,
   // v1.2.0
   ManageSubscriptionModalProps,
-  ConfirmDialogProps
+  ConfirmDialogProps,
+  // v1.3.0
+  SubscriptionCardProps,
+  SubscriptionDashboardProps
 } from './components';
 
 // Types
@@ -204,4 +217,4 @@ export type { WalletSession } from './wallet';
 export { logger, type LogLevel, type LoggerConfig } from './utils/logger';
 
 // Version
-export const VERSION = '1.2.0';
+export const VERSION = '1.3.0';

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-01-28
+
+### Added
+- **Subscriber Dashboard (F3)** - Full subscription management UI for end users:
+  - `useMySubscriptions(address?, pageSize?)` hook - Paginated subscriptions list with next/prev navigation
+  - `SubscriptionCard` component - Display subscription with status badge (Active/Expired/Expiring Soon/Cancelled), amount, frequency, next payment date, auto-renewal status, remaining cycles, and manage button
+  - `SubscriptionDashboard` component - Complete dashboard with grid layout, pagination, empty/loading/error states, and ManageSubscriptionModal integration
+  - CSS styles for subscription cards, dashboard, pagination, and colored status badges
+- **Event Subscriptions** - Real-time protocol event listeners for live updates:
+  - `useSubscryptsEvents(callbacks)` hook - Subscribe to subscription creation, payment, and stop/cancel events
+  - Uses ethers.js `contract.on()` under the hood with automatic cleanup on unmount
+  - Enables live dashboard updates without a backend
+
 ## [1.2.0] - 2026-01-28
 
 ### Added
