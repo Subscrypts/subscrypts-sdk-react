@@ -30,3 +30,6 @@ export type { ConnectWalletModalProps } from './wallet/ConnectWalletModal';
 
 // Subscription management components (v1.2.0)
 export * from './subscription';
+
+// Merchant components (v1.4.0)
+export * from './merchant';

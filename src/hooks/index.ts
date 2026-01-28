@@ -22,3 +22,6 @@ export * from './pricing';
 
 // Event hooks (v1.3.0)
 export * from './events';
+
+// Merchant hooks (v1.4.0)
+export * from './merchant';

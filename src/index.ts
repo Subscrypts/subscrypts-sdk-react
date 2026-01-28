@@ -42,7 +42,11 @@ export {
   usePlansByMerchant,
   // v1.3.0
   useMySubscriptions,
-  useSubscryptsEvents
+  useSubscryptsEvents,
+  // v1.4.0
+  useMerchantPlans,
+  useMerchantSubscribers,
+  useMerchantRevenue
 } from './hooks';
 export type {
   UseSubscriptionStatusReturn,
@@ -62,7 +66,12 @@ export type {
   // v1.3.0
   UseMySubscriptionsReturn,
   SubscryptsEventCallbacks,
-  UseSubscryptsEventsReturn
+  UseSubscryptsEventsReturn,
+  // v1.4.0
+  UseMerchantPlansReturn,
+  UseMerchantSubscribersReturn,
+  MerchantRevenueData,
+  UseMerchantRevenueReturn
 } from './hooks';
 
 // Components
@@ -83,7 +92,9 @@ export {
   ConfirmDialog,
   // v1.3.0
   SubscriptionCard,
-  SubscriptionDashboard
+  SubscriptionDashboard,
+  // v1.4.0
+  MerchantDashboard
 } from './components';
 export type {
   PlanCardProps,
@@ -99,7 +110,9 @@ export type {
   ConfirmDialogProps,
   // v1.3.0
   SubscriptionCardProps,
-  SubscriptionDashboardProps
+  SubscriptionDashboardProps,
+  // v1.4.0
+  MerchantDashboardProps
 } from './components';
 
 // Types
@@ -217,4 +230,4 @@ export type { WalletSession } from './wallet';
 export { logger, type LogLevel, type LoggerConfig } from './utils/logger';
 
 // Version
-export const VERSION = '1.3.0';
+export const VERSION = '1.4.0';

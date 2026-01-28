@@ -975,6 +975,31 @@ import { SubscriptionDashboard } from '@subscrypts/react-sdk';
 
 ---
 
+#### `<MerchantDashboard>`
+
+**Complete merchant dashboard** with revenue, plans, and subscribers.
+
+```tsx
+import { MerchantDashboard } from '@subscrypts/react-sdk';
+
+<MerchantDashboard />
+```
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `merchantAddress` | `string` | No | Connected wallet | Merchant address |
+| `className` | `string` | No | - | Additional CSS class |
+
+**Features:**
+- Revenue overview card (MRR in SUBS/USD, active vs total subscribers)
+- Grid of merchant's plans with subscriber counts
+- Click plan to view subscriber details
+- Empty state for new merchants
+
+---
+
 ### Hooks
 
 #### `useSubscriptionStatus`
@@ -1363,6 +1388,94 @@ useSubscryptsEvents({
 {
   isListening: boolean;
   error: Error | null;
+}
+```
+
+---
+
+#### `useMerchantPlans`
+
+**Fetch all plans** owned by the connected wallet (merchant).
+
+```tsx
+const { plans, total, isLoading } = useMerchantPlans();
+
+plans.forEach(plan => {
+  console.log(`${plan.description}: ${plan.subscriberCount.toString()} subscribers`);
+});
+```
+
+**Returns:** Same as `usePlansByMerchant` - wrapper using connected wallet address.
+
+---
+
+#### `useMerchantSubscribers`
+
+**Fetch paginated subscribers** for a specific plan.
+
+```tsx
+const {
+  subscribers,
+  total,
+  activeCount,
+  page,
+  hasMore,
+  nextPage,
+  prevPage,
+  isLoading
+} = useMerchantSubscribers('1');
+
+console.log(`${activeCount} active out of ${total} subscribers`);
+```
+
+**Returns:**
+
+```typescript
+{
+  subscribers: Subscription[];
+  total: number;
+  activeCount: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+  isLoading: boolean;
+  error: Error | null;
+  nextPage: () => void;
+  prevPage: () => void;
+  refetch: () => Promise<void>;
+}
+```
+
+---
+
+#### `useMerchantRevenue`
+
+**Calculate Monthly Recurring Revenue (MRR)** from active subscriptions.
+
+```tsx
+const { revenue, isLoading } = useMerchantRevenue();
+
+if (revenue) {
+  console.log(`MRR: ${revenue.mrrFormatted} SUBS`);
+  console.log(`≈ $${revenue.mrrUsdEstimate?.toFixed(2)}`);
+  console.log(`${revenue.activeSubscribers} / ${revenue.totalSubscribers} active`);
+}
+```
+
+**Returns:**
+
+```typescript
+{
+  revenue: {
+    totalSubscribers: number;
+    activeSubscribers: number;
+    monthlyRecurringRevenue: bigint;
+    mrrFormatted: string;
+    mrrUsdEstimate: number | null;
+  } | null;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
 }
 ```
 

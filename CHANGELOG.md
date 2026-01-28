@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2026-01-28
+
+### Added
+- **Merchant Toolkit (F8)** - Everything a merchant needs to manage their subscription business:
+  - `useMerchantPlans()` hook - Fetch all plans owned by connected wallet (merchant)
+  - `useMerchantSubscribers(planId, pageSize?)` hook - Paginated subscribers list for a specific plan with active count
+  - `useMerchantRevenue(planIds?)` hook - Calculate Monthly Recurring Revenue (MRR) from active subscriptions, normalized to monthly amounts, with USD conversion
+  - `MerchantDashboard` component - Complete merchant overview with revenue metrics (MRR, active subscribers, total subscribers), plan list with subscriber counts, and subscriber details for selected plans
+  - CSS styles for merchant dashboard, revenue cards, plan cards, subscriber lists, and metrics display
+
 ## [1.3.0] - 2026-01-28
 
 ### Added

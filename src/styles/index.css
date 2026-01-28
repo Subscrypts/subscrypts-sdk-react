@@ -981,3 +981,261 @@
   color: var(--subscrypts-text-secondary);
   margin: 0;
 }
+
+/* =============================================
+   Merchant Dashboard (v1.4.0)
+   ============================================= */
+
+.subscrypts-merchant-dashboard {
+  width: 100%;
+}
+
+.subscrypts-merchant-dashboard__header {
+  margin-bottom: 2rem;
+}
+
+.subscrypts-merchant-dashboard__title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--subscrypts-text-primary);
+  margin: 0;
+}
+
+.subscrypts-merchant-dashboard__loading,
+.subscrypts-merchant-dashboard__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
+
+.subscrypts-merchant-dashboard__loading p {
+  margin-top: 1rem;
+  color: var(--subscrypts-text-secondary);
+}
+
+.subscrypts-merchant-dashboard__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background-color: var(--subscrypts-bg-secondary);
+  border-radius: var(--subscrypts-border-radius);
+}
+
+.subscrypts-merchant-dashboard__empty-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--subscrypts-text-primary);
+  margin: 0 0 0.75rem 0;
+}
+
+.subscrypts-merchant-dashboard__empty-text {
+  font-size: 1rem;
+  color: var(--subscrypts-text-secondary);
+  margin: 0;
+}
+
+.subscrypts-merchant-dashboard__revenue-card {
+  background-color: var(--subscrypts-bg-secondary);
+  border-radius: var(--subscrypts-border-radius);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.subscrypts-merchant-dashboard__section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--subscrypts-text-primary);
+  margin: 0 0 1.5rem 0;
+}
+
+.subscrypts-merchant-dashboard__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+}
+
+.subscrypts-merchant-dashboard__metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.subscrypts-merchant-dashboard__metric-label {
+  font-size: 0.875rem;
+  color: var(--subscrypts-text-secondary);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.subscrypts-merchant-dashboard__metric-value {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--subscrypts-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.subscrypts-merchant-dashboard__metric-value--primary {
+  color: var(--subscrypts-color-primary);
+}
+
+.subscrypts-merchant-dashboard__metric-subvalue {
+  font-size: 0.875rem;
+  color: var(--subscrypts-text-secondary);
+}
+
+.subscrypts-merchant-dashboard__section {
+  margin-bottom: 2rem;
+}
+
+.subscrypts-merchant-dashboard__plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.subscrypts-merchant-dashboard__plan-card {
+  background-color: var(--subscrypts-bg-primary);
+  border: 2px solid var(--subscrypts-color-border);
+  border-radius: var(--subscrypts-border-radius);
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.subscrypts-merchant-dashboard__plan-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: var(--subscrypts-color-primary);
+}
+
+.subscrypts-merchant-dashboard__plan-card--selected {
+  border-color: var(--subscrypts-color-primary);
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.subscrypts-merchant-dashboard__plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.subscrypts-merchant-dashboard__plan-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--subscrypts-text-primary);
+  margin: 0;
+}
+
+.subscrypts-merchant-dashboard__plan-badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  background-color: #d1fae5;
+  color: #065f46;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.subscrypts-merchant-dashboard__plan-description {
+  font-size: 0.875rem;
+  color: var(--subscrypts-text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.subscrypts-merchant-dashboard__plan-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.subscrypts-merchant-dashboard__plan-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.subscrypts-merchant-dashboard__plan-stat-label {
+  color: var(--subscrypts-text-secondary);
+}
+
+.subscrypts-merchant-dashboard__plan-stat-value {
+  color: var(--subscrypts-text-primary);
+  font-weight: 500;
+}
+
+.subscrypts-merchant-dashboard__subscribers-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+}
+
+.subscrypts-merchant-dashboard__subscribers-loading p {
+  margin-top: 1rem;
+  color: var(--subscrypts-text-secondary);
+}
+
+.subscrypts-merchant-dashboard__subscribers-empty {
+  padding: 2rem;
+  text-align: center;
+  background-color: var(--subscrypts-bg-secondary);
+  border-radius: var(--subscrypts-border-radius);
+}
+
+.subscrypts-merchant-dashboard__subscribers-empty p {
+  color: var(--subscrypts-text-secondary);
+  margin: 0;
+}
+
+.subscrypts-merchant-dashboard__subscribers-summary {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: var(--subscrypts-bg-secondary);
+  border-radius: var(--subscrypts-border-radius);
+}
+
+.subscrypts-merchant-dashboard__subscribers-summary p {
+  color: var(--subscrypts-text-primary);
+  margin: 0;
+  font-weight: 500;
+}
+
+.subscrypts-merchant-dashboard__subscribers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.subscrypts-merchant-dashboard__subscriber-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  background-color: var(--subscrypts-bg-primary);
+  border: 1px solid var(--subscrypts-color-border);
+  border-radius: var(--subscrypts-border-radius);
+}
+
+.subscrypts-merchant-dashboard__subscriber-address {
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: var(--subscrypts-text-primary);
+  font-weight: 500;
+}
+
+.subscrypts-merchant-dashboard__subscriber-status,
+.subscrypts-merchant-dashboard__subscriber-cycles {
+  font-size: 0.875rem;
+  color: var(--subscrypts-text-secondary);
+}
