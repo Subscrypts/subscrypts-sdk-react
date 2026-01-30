@@ -17,8 +17,14 @@ vitest.config.ts
 .idea
 *.log
 node_modules
-.claude
+.claude/
 claude-information
+
+# Misc
+*.local
+.cache
+.temp
+temp/
 
 # Testing
 **/*.test.ts

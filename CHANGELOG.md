@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.2] - 2026-01-30
+
+### Fixed
+- **README.md documentation fixes** - Corrected invalid planId examples and added missing type documentation
+  - **Issue**: README contained kebab-case string examples (`'premium-plan'`, `'basic-plan'`) that would fail at runtime due to `BigInt()` conversion errors
+  - **Root Cause**: SDK uses string→bigint conversion at service layer, but validation only checks non-empty strings. Non-numeric strings pass validation but crash during conversion
+  - **Fixed Examples**:
+    - Line 72: `'plan-id'` → `'1'` (Headless Hooks API section)
+    - Line 237: `'premium-plan'` → `'2'` (Subscribe Button section)
+    - Line 351: `'premium-articles'` → `'1'` (Simple Paywall example)
+    - Lines 512-529: `'basic-plan'`, `'premium-plan'`, `'enterprise-plan'` → `'1'`, `'2'`, `'3'` (Multi-Tier Pricing example)
+    - Line 641: `'premium-plan'` → `'2'` (SubscryptsButton API reference)
+    - Line 674: `'premium-plan'` → `'2'` (CheckoutWizard API reference)
+    - Line 1054: `'premium-plan'` → `'2'` (useSubscribe hook example)
+  - **Added Documentation**:
+    - Plan struct definition in Types section with all 12 fields and inline comments
+    - Subscription struct definition in Types section with all 12 fields and relationship explanation
+    - planId format guidance explaining numeric strings requirement after "Where do I get planId?" section
+    - Examples showing correct (`planId="1"`, `planId="42"`) vs incorrect (`planId="premium-plan"`) usage
+  - **Impact**: All README examples now correctly demonstrate numeric string plan IDs, preventing developer confusion and runtime errors
+
 ## [1.4.1] - 2026-01-30
 
 ### Fixed

@@ -69,7 +69,7 @@ Drop-in React components that work out of the box - no blockchain expertise requ
 Complete control over UI with powerful, composable hooks.
 
 ```tsx
-const { status, isActive } = useSubscriptionStatus('plan-id');
+const { status, isActive } = useSubscriptionStatus('1');
 ```
 
 ### 🔐 **Built-in Access Control**
@@ -212,6 +212,12 @@ function MyApp() {
 **Where do I get `planId`?**
 You'll receive the plan ID when you create a subscription plan on the Subscrypts contract. This is the unique identifier for your subscription plan on the blockchain.
 
+**Important:** Plan IDs must be numeric strings representing the on-chain plan ID. The smart contract auto-increments plan IDs starting from 1. Use numeric strings like `"1"`, `"2"`, `"42"` - NOT descriptive names like `"premium-plan"`.
+
+Examples:
+- ✅ Correct: `planId="1"`, `planId="42"`
+- ❌ Wrong: `planId="premium-plan"`, `planId="basic"`
+
 ---
 
 ### 3. Add a Subscribe Button
@@ -234,7 +240,7 @@ function SubscribePage() {
       <p>Get access to exclusive content for only 10 SUBS/month!</p>
 
       <SubscryptsButton
-        planId="premium-plan"
+        planId="2"
         variant="primary"
         size="lg"
         onSuccess={handleSuccess}
@@ -348,7 +354,7 @@ function PremiumArticle() {
       {/* Subscribe CTA */}
       <div className="subscribe-cta">
         <h3>Want to read more?</h3>
-        <SubscryptsButton planId="premium-articles">
+        <SubscryptsButton planId="1">
           Subscribe for $5/month
         </SubscryptsButton>
       </div>
@@ -509,19 +515,19 @@ import { SubscryptsButton } from '@subscrypts/react-sdk';
 function PricingPage() {
   const plans = [
     {
-      id: 'basic-plan',
+      id: '1',
       name: 'Basic',
       price: '5 SUBS',
       features: ['Access to articles', 'Email support']
     },
     {
-      id: 'premium-plan',
+      id: '2',
       name: 'Premium',
       price: '10 SUBS',
       features: ['Everything in Basic', 'Video content', 'Priority support']
     },
     {
-      id: 'enterprise-plan',
+      id: '3',
       name: 'Enterprise',
       price: '20 SUBS',
       features: ['Everything in Premium', 'API access', 'Custom integrations']
@@ -632,7 +638,7 @@ function PricingPage() {
 
 ```tsx
 <SubscryptsButton
-  planId="premium-plan"
+  planId="2"
   variant="primary"
   size="lg"
   referralAddress="0x..."
@@ -665,7 +671,7 @@ function PricingPage() {
 const [isOpen, setIsOpen] = useState(false);
 
 <CheckoutWizard
-  planId="premium-plan"
+  planId="2"
   isOpen={isOpen}
   onClose={() => setIsOpen(false)}
   onSuccess={(id) => alert('Success!')}
@@ -1045,7 +1051,7 @@ const { subscribe, isSubscribing, txState, error, subscriptionId } = useSubscrib
 
 const handleSubscribe = async () => {
   const subId = await subscribe({
-    planId: 'premium-plan',
+    planId: '2',
     cycleLimit: 12,
     autoRenew: true,
     paymentMethod: 'SUBS'
@@ -1503,6 +1509,56 @@ const {
 ---
 
 ### Types
+
+#### `Plan`
+
+The Plan type represents a subscription plan created by a merchant on the Subscrypts smart contract.
+
+```typescript
+interface Plan {
+  id: bigint;                      // Plan ID (auto-incremented by contract)
+  merchantAddress: string;          // Creator's wallet address
+  currencyCode: bigint;             // 0 = SUBS, 1 = USD
+  subscriptionAmount: bigint;       // Price (18 decimals for SUBS)
+  paymentFrequency: bigint;         // Seconds between payments
+  referralBonus: bigint;            // Referral reward amount
+  commission: bigint;               // Protocol commission
+  description: string;              // Plan name/description (bytes32)
+  defaultAttributes: string;        // Default subscription attributes
+  verificationExpiryDate: bigint;   // Expiry timestamp
+  subscriberCount: bigint;          // Total subscriber count
+  isActive: boolean;                // Whether plan accepts subscriptions
+}
+```
+
+**Note:** When passing planId to components and hooks, use numeric strings (e.g., `"1"`, `"42"`). These are automatically converted to bigint for blockchain calls.
+
+---
+
+#### `Subscription`
+
+The Subscription type represents an active or past subscription from a wallet to a specific plan. This is the **full subscription data** returned by `useMySubscriptions()`, `useMerchantSubscribers()`, and used by `SubscriptionCard`.
+
+```typescript
+interface Subscription {
+  id: bigint;                      // Subscription ID (auto-incremented by contract)
+  merchantAddress: string;          // Plan owner's wallet address
+  planId: bigint;                   // Associated plan ID
+  subscriberAddress: string;        // Subscriber's wallet address
+  currencyCode: bigint;             // 0 = SUBS, 1 = USD
+  subscriptionAmount: bigint;       // Subscription price (copied from plan)
+  paymentFrequency: bigint;         // Payment interval in seconds
+  isRecurring: boolean;             // Auto-renewal enabled
+  remainingCycles: number;          // Cycles left before expiration
+  customAttributes: string;         // Custom metadata (bytes32)
+  lastPaymentDate: bigint;          // Timestamp of last payment
+  nextPaymentDate: bigint;          // Timestamp when next payment is due
+}
+```
+
+**Important:** `useSubscriptionStatus()` returns a simplified `SubscriptionStatus` object (see below) rather than the full `Subscription` struct. The `SubscriptionStatus` is derived from the full subscription data for easier access control decisions.
+
+---
 
 #### `SubscriptionStatus`
 
@@ -2007,7 +2063,6 @@ import { SubscryptsButton } from '@subscrypts/react-sdk';
 ### Documentation
 
 - **Full Docs**: [docs.subscrypts.com](https://docs.subscrypts.com)
-- **API Reference**: [api.subscrypts.com](https://api.subscrypts.com)
 - **Video Tutorials**: [youtube.com/@subscrypts](https://youtube.com/@subscrypts)
 
 ### Community
@@ -2019,10 +2074,6 @@ import { SubscryptsButton } from '@subscrypts/react-sdk';
 ### Issues & Bug Reports
 
 Found a bug? [Open an issue on GitHub](https://github.com/subscrypts/react-sdk/issues)
-
-### Enterprise Support
-
-Need priority support or custom features? Contact: [enterprise@subscrypts.com](mailto:enterprise@subscrypts.com)
 
 ---
 
