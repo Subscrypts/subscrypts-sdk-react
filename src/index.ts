@@ -230,4 +230,4 @@ export type { WalletSession } from './wallet';
 export { logger, type LogLevel, type LoggerConfig } from './utils/logger';
 
 // Version
-export const VERSION = '1.4.0';
+export const VERSION = '1.4.1';

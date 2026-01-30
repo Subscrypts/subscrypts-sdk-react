@@ -40,12 +40,29 @@ function useMultiPlanStatus(
       const results = await Promise.all(
         planIds.map(async (planId) => {
           try {
-            const subscription = await contractService.getPlanSubscription(
+            // STEP 1: Get subscriptionId from plan/subscriber mapping
+            const planSubscription = await contractService.getPlanSubscription(
               planId,
               wallet.address!
             );
-            if (!subscription) return false;
-            return Number(subscription.nextPaymentDate) > now;
+
+            // Extract subscriptionId
+            const subscriptionId = planSubscription?.id ?? 0n;
+
+            if (subscriptionId === 0n || !planSubscription) {
+              return false;
+            }
+
+            // STEP 2: Get FULL subscription data with authoritative nextPaymentDate
+            const subscription = await contractService.getSubscription(subscriptionId);
+
+            if (!subscription) {
+              return false;
+            }
+
+            // Check if active using REAL nextPaymentDate
+            const nextPaymentDate = subscription.nextPaymentDate ?? 0n;
+            return Number(nextPaymentDate) > now;
           } catch {
             return false;
           }

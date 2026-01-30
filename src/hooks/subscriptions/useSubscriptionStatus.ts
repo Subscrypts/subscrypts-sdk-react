@@ -86,13 +86,16 @@ export function useSubscriptionStatus(
     try {
       const contractService = new ContractService(subscryptsContract);
 
-      // Fetch subscription from contract
-      const subscription = await contractService.getPlanSubscription(
+      // STEP 1: Get subscriptionId from plan/subscriber mapping
+      const planSubscription = await contractService.getPlanSubscription(
         planId,
         addressToCheck
       );
 
-      if (!subscription) {
+      // Extract subscriptionId
+      const subscriptionId = planSubscription?.id ?? 0n;
+
+      if (subscriptionId === 0n || !planSubscription) {
         setStatus({
           isActive: false,
           expirationDate: null,
@@ -104,16 +107,32 @@ export function useSubscriptionStatus(
         return;
       }
 
-      // Check if subscription is active
+      // STEP 2: Get FULL subscription data with authoritative nextPaymentDate
+      const subscription = await contractService.getSubscription(subscriptionId);
+
+      if (!subscription) {
+        setStatus({
+          isActive: false,
+          expirationDate: null,
+          isAutoRenewing: false,
+          remainingCycles: 0,
+          subscriptionId: subscriptionId.toString()
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if subscription is active using REAL nextPaymentDate
       const now = Math.floor(Date.now() / 1000);
-      const isActive = Number(subscription.nextPaymentDate) > now;
+      const nextPaymentDate = subscription.nextPaymentDate ?? 0n;
+      const isActive = Number(nextPaymentDate) > now;
 
       setStatus({
         isActive,
-        expirationDate: new Date(Number(subscription.nextPaymentDate) * 1000),
+        expirationDate: new Date(Number(nextPaymentDate) * 1000),
         isAutoRenewing: subscription.isRecurring,
         remainingCycles: Number(subscription.remainingCycles),
-        subscriptionId: subscription.planId.toString()
+        subscriptionId: subscriptionId.toString() // Fixed: was subscription.planId
       });
 
       setIsLoading(false);

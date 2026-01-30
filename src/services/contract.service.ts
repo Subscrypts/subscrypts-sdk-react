@@ -56,6 +56,32 @@ export class ContractService {
   }
 
   /**
+   * Get full subscription data by subscription ID
+   * Returns authoritative subscription state including nextPaymentDate
+   */
+  async getSubscription(
+    subscriptionId: string | bigint
+  ): Promise<ContractSubscription | null> {
+    try {
+      const subIdBigInt = typeof subscriptionId === 'string' ? BigInt(subscriptionId) : subscriptionId;
+
+      const subscription = await this.contract.getSubscription(subIdBigInt);
+
+      // Check if subscription exists
+      if (!subscription || subscription.id === 0n) {
+        return null;
+      }
+
+      return subscription;
+    } catch (error) {
+      throw new ContractError(
+        `Failed to fetch subscription ${subscriptionId}`,
+        { subscriptionId: subscriptionId.toString(), error }
+      );
+    }
+  }
+
+  /**
    * Get current subscription state for a plan/subscriber
    * Uses two-step lookup: getPlanSubscription → getSubscription
    *

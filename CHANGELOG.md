@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2026-01-30
+
+### Fixed
+- **CRITICAL: Subscription verification bug** - Fixed incorrect subscription status checking in `useSubscriptionStatus` hook and `SubscriptionGuard` component
+  - **Root Cause**: Hooks were only calling `getPlanSubscription()` which returns PARTIAL data (id, merchantAddress, planId, subscriberAddress only). All other fields including `nextPaymentDate` are returned as defaults (0, false).
+  - **Impact**: Valid subscribers were being denied access because the hook used incomplete/default `nextPaymentDate` values instead of authoritative on-chain state
+  - **Fix**: Implemented correct two-step verification pattern:
+    1. Call `getPlanSubscription(planId, subscriber)` to get subscriptionId
+    2. Call `getSubscription(subscriptionId)` to get FULL subscription data with real `nextPaymentDate`
+  - **Changes**:
+    - `useSubscriptionStatus` hook now calls both `getPlanSubscription()` and `getSubscription()` for accurate status checking
+    - `SubscriptionGuard` multi-plan mode now implements the same two-step pattern
+    - Added public `getSubscription(subscriptionId)` method to `ContractService` for accessing full subscription data
+    - Fixed wrong `subscriptionId` assignment in status object (was using `planId` instead of `id`)
+  - **Technical Details**: The smart contract's `getPlanSubscription()` is designed as a lookup/index resolver, not a full subscription reader. The `getSubscription()` call is required to retrieve the authoritative `nextPaymentDate`, `lastPaymentDate`, `isRecurring`, and `remainingCycles` fields that determine subscription status.
+
 ## [1.4.0] - 2026-01-28
 
 ### Added
