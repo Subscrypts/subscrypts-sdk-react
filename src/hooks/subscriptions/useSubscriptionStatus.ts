@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSubscrypts } from '../../context/SubscryptsContext';
 import { SubscriptionStatus } from '../../types';
-import { ContractService } from '../../services';
+import { getPlanSubscription, getSubscription } from '../../contract';
 import { validatePlanId } from '../../utils/validators';
 
 /**
@@ -84,11 +84,10 @@ export function useSubscriptionStatus(
     setError(null);
 
     try {
-      const contractService = new ContractService(subscryptsContract);
-
       // STEP 1: Get subscriptionId from plan/subscriber mapping
-      const planSubscription = await contractService.getPlanSubscription(
-        planId,
+      const planSubscription = await getPlanSubscription(
+        subscryptsContract as any,
+        BigInt(planId),
         addressToCheck
       );
 
@@ -108,7 +107,7 @@ export function useSubscriptionStatus(
       }
 
       // STEP 2: Get FULL subscription data with authoritative nextPaymentDate
-      const subscription = await contractService.getSubscription(subscriptionId);
+      const subscription = await getSubscription(subscryptsContract as any, subscriptionId);
 
       if (!subscription) {
         setStatus({
@@ -132,7 +131,7 @@ export function useSubscriptionStatus(
         expirationDate: new Date(Number(nextPaymentDate) * 1000),
         isAutoRenewing: subscription.isRecurring,
         remainingCycles: Number(subscription.remainingCycles),
-        subscriptionId: subscriptionId.toString() // Fixed: was subscription.planId
+        subscriptionId: subscriptionId.toString()
       });
 
       setIsLoading(false);

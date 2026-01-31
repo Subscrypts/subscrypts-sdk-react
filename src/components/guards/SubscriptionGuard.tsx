@@ -9,7 +9,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSubscriptionStatus } from '../../hooks/subscriptions/useSubscriptionStatus';
 import { useSubscrypts } from '../../context/SubscryptsContext';
 import { SubscriptionGuardProps } from '../../types';
-import { ContractService } from '../../services';
+import { getPlanSubscription, getSubscription } from '../../contract';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
 
 /**
@@ -34,15 +34,15 @@ function useMultiPlanStatus(
     setIsLoading(true);
 
     try {
-      const contractService = new ContractService(subscryptsContract);
       const now = Math.floor(Date.now() / 1000);
 
       const results = await Promise.all(
         planIds.map(async (planId) => {
           try {
             // STEP 1: Get subscriptionId from plan/subscriber mapping
-            const planSubscription = await contractService.getPlanSubscription(
-              planId,
+            const planSubscription = await getPlanSubscription(
+              subscryptsContract as any,
+              BigInt(planId),
               wallet.address!
             );
 
@@ -54,7 +54,7 @@ function useMultiPlanStatus(
             }
 
             // STEP 2: Get FULL subscription data with authoritative nextPaymentDate
-            const subscription = await contractService.getSubscription(subscriptionId);
+            const subscription = await getSubscription(subscryptsContract as any, subscriptionId);
 
             if (!subscription) {
               return false;

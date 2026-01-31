@@ -2,6 +2,82 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2026-01-31
+
+### Changed
+- **BREAKING (Minor): Removed ContractService - Architectural Consolidation**
+  - **Migration Path**: All ContractService usage has been migrated to use `methods.ts` directly
+  - **Impact**: No public API changes - ContractService was internal, hooks and components work identically
+  - **Why**: Eliminated architectural duplication that caused v1.4.4 data transformation bug
+  - **Benefit**: Single source of truth for all contract calls, prevents future regressions
+  - **Files Removed**:
+    - `src/services/contract.service.ts` - Deleted entirely
+    - `src/services/index.ts` - Removed ContractService export
+  - **Files Modified**:
+    - `src/hooks/subscriptions/useSubscribe.ts` - Now uses `createSubscriptionVerified()` and `paySubscriptionWithUsdcVerified()`
+    - `src/hooks/subscriptions/useSubscriptionStatus.ts` - Now uses `getPlanSubscription()` and `getSubscription()` from methods.ts
+    - `src/components/guards/SubscriptionGuard.tsx` - Now uses methods.ts functions directly
+  - **Technical Details**: ContractService was a wrapper layer that duplicated logic from methods.ts. In v1.4.4, it bypassed `cleanSub()` helpers, causing React hooks to receive Proxy arrays instead of clean objects. Removing this layer enforces the single correct path: hooks → methods.ts → contract → cleanSub/cleanPlan → React state.
+
+### Added
+- **Verified Transaction Wrappers in methods.ts**
+  - Added `createSubscriptionVerified()` - High-level wrapper for SUBS subscription creation with event parsing and fallback verification
+  - Added `paySubscriptionWithUsdcVerified()` - High-level wrapper for USDC subscription creation with verification
+  - **Why**: Extract verification logic from ContractService before removal, maintain reliability
+  - **Features**:
+    - Captures subscription state before transaction
+    - Parses transaction events to extract subscriptionId
+    - Falls back to state verification if event parsing fails (common for multi-contract USDC transactions)
+    - Returns structured result with guaranteed subscriptionId
+    - Throws clear errors if verification fails
+  - **Usage**: Hooks now call these wrappers instead of raw contract methods
+
+- **CLAUDE.md: Critical Development Patterns Section**
+  - Documented 7 essential patterns learned from v1.4.x bugs and v1.5.0 refactoring
+  - Pattern 1: Always use methods.ts for contract calls
+  - Pattern 2: Always transform contract data with cleanSub() and cleanPlan()
+  - Pattern 3: Use verified transaction wrappers for subscriptions
+  - Pattern 4: Type conversions at boundaries
+  - Pattern 5: Two-step pattern for subscription status (mandatory)
+  - Pattern 6: ContractRunner vs Contract type casting
+  - Pattern 7: Architectural lessons from v1.4.x → v1.5.0
+  - Quick reference table with file locations
+  - **Purpose**: Prevent regressions, enforce single source of truth
+
+### Fixed
+- **Type Conversion Bug in useSubscribe.ts**
+  - Fixed `DEFAULTS.UNISWAP_FEE_TIER` type mismatch (number → bigint)
+  - Changed: `feeTier: BigInt(DEFAULTS.UNISWAP_FEE_TIER)`
+
+### Improved
+- **Package Size Reduction**: Bundle reduced from 193.78 kB → 188.01 kB (3% smaller)
+- **Architecture Simplification**: Single path for all contract calls
+- **Enforced Data Transformation**: Can't bypass cleanSub/cleanPlan anymore
+
+### Technical Context
+
+**Why This Release Exists**: The v1.4.x series revealed a critical architectural flaw - two separate code paths for contract interaction (methods.ts and ContractService) led to inconsistent data transformation. In v1.4.4, ContractService bypassed `cleanSub()` helpers, returning raw Proxy arrays that broke when stored in React state. v1.5.0 removes ContractService entirely, enforcing a single correct path and preventing future duplication.
+
+**Flow After v1.5.0**:
+```
+User → Hook → methods.ts → contract → cleanSub/cleanPlan → React state
+```
+
+**Benefits**:
+1. Single Source of Truth: Only methods.ts touches contracts
+2. Enforced Transformation: Can't bypass cleanSub/cleanPlan anymore
+3. Simpler Codebase: One less abstraction layer
+4. Better Maintainability: Changes only needed in one place
+5. Smaller Bundle: 3% size reduction
+
+**Migration for Integrators**: No migration needed! ContractService was internal. All public hooks and components work identically. If you were directly importing ContractService (not recommended), switch to methods.ts functions.
+
+**Lessons Learned**:
+- Architectural duplication is a bug waiting to happen
+- Data transformation MUST be centralized and enforced
+- Abstract only when necessary, not preemptively
+- Simpler code is better code
+
 ## [1.4.4] - 2026-01-31
 
 ### Fixed

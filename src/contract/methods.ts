@@ -590,3 +590,337 @@ export const proxiableUUID = async (runner: ethers.ContractRunner) => {
 export const quoteUsdcForSubs = async (runner: ethers.ContractRunner, subsOut: bigint, feeTier: bigint) => {
   return await getContract(runner).quoteUsdcForSubs(subsOut, feeTier);
 };
+
+// ==========================================
+//    VERIFIED TRANSACTION WRAPPERS
+// ==========================================
+
+/**
+ * Parse _subscriptionCreate event from transaction receipt
+ * @private
+ */
+const parseSubscriptionCreatedEvent = (receipt: ethers.TransactionReceipt, contractInterface: ethers.Interface): bigint => {
+  for (const log of receipt.logs) {
+    try {
+      const parsed = contractInterface.parseLog({
+        topics: [...log.topics] as string[],
+        data: log.data
+      });
+
+      if (parsed && parsed.name === '_subscriptionCreate') {
+        return parsed.args.subscriptionId;
+      }
+    } catch {
+      // Continue to next log if parsing fails
+      continue;
+    }
+  }
+
+  throw new Error(`Subscription ID not found in transaction logs: ${receipt.hash}`);
+};
+
+/**
+ * Parse subscriptionPaidWithUsdc event from transaction receipt
+ * @private
+ */
+const parseUsdcPaymentEvent = (receipt: ethers.TransactionReceipt, contractInterface: ethers.Interface): {
+  subsAmount18: bigint;
+  usdcSpent6: bigint;
+} | null => {
+  for (const log of receipt.logs) {
+    try {
+      const parsed = contractInterface.parseLog({
+        topics: [...log.topics] as string[],
+        data: log.data
+      });
+
+      if (parsed && parsed.name === 'subscriptionPaidWithUsdc') {
+        return {
+          subsAmount18: parsed.args.subsAmount18,
+          usdcSpent6: parsed.args.usdcSpent6
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Get current subscription state for verification
+ * Uses two-step lookup: getPlanSubscription → getSubscription
+ * @private
+ */
+const getSubscriptionState = async (
+  runner: ethers.ContractRunner | ethers.Contract,
+  planId: bigint,
+  subscriber: string
+): Promise<{ subscriptionId: bigint; nextPaymentDate: bigint }> => {
+  try {
+    const contract = runner instanceof ethers.Contract ? runner : getContract(runner);
+
+    // Step 1: Get subscriptionId from plan/subscriber mapping
+    const planSubscription = await contract.getPlanSubscription(planId, subscriber);
+    const subscriptionId = planSubscription?.id ?? planSubscription?.[0] ?? 0n;
+
+    if (subscriptionId === 0n) {
+      return { subscriptionId: 0n, nextPaymentDate: 0n };
+    }
+
+    // Step 2: Get full subscription record with real nextPaymentDate
+    const subscription = await contract.getSubscription(subscriptionId);
+    const nextPaymentDate = subscription?.nextPaymentDate ?? subscription?.[11] ?? 0n;
+
+    return { subscriptionId, nextPaymentDate };
+  } catch {
+    return { subscriptionId: 0n, nextPaymentDate: 0n };
+  }
+};
+
+/**
+ * Verify subscription payment by checking nextPaymentDate change
+ * @private
+ */
+const verifySubscriptionPayment = async (
+  runner: ethers.ContractRunner | ethers.Contract,
+  planId: bigint,
+  subscriber: string,
+  previousNextPaymentDate: bigint
+): Promise<bigint | null> => {
+  try {
+    const contract = runner instanceof ethers.Contract ? runner : getContract(runner);
+
+    // Step 1: Get subscriptionId
+    const planSubscription = await contract.getPlanSubscription(planId, subscriber);
+    const subscriptionId = planSubscription?.id ?? planSubscription?.[0] ?? 0n;
+
+    if (subscriptionId === 0n) {
+      return null;
+    }
+
+    // Step 2: Get full subscription with real nextPaymentDate
+    const subscription = await contract.getSubscription(subscriptionId);
+    const nextPaymentDate = subscription?.nextPaymentDate ?? subscription?.[11] ?? 0n;
+
+    // Subscription exists and nextPaymentDate has changed (increased)
+    if (nextPaymentDate > 0n && nextPaymentDate > previousNextPaymentDate) {
+      return subscriptionId;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Create a subscription with SUBS tokens (with verification)
+ *
+ * This is a high-level wrapper that:
+ * - Captures state before transaction
+ * - Executes the transaction
+ * - Parses events to extract subscriptionId
+ * - Falls back to state verification if event parsing fails
+ *
+ * @param signer - Ethers signer
+ * @param params - Subscription creation parameters
+ * @returns subscriptionId and alreadyExist flag
+ *
+ * @example
+ * ```typescript
+ * const result = await createSubscriptionVerified(signer, {
+ *   planId: 1n,
+ *   subscriber: '0x...',
+ *   recurring: true,
+ *   remainingCycles: 12n,
+ *   referral: ethers.ZeroAddress,
+ *   onlyCreate: false,
+ *   deductFrom: '0x...'
+ * });
+ * console.log('Subscription ID:', result.subscriptionId);
+ * ```
+ */
+export const createSubscriptionVerified = async (
+  signer: ethers.Signer,
+  params: {
+    planId: bigint;
+    subscriber: string;
+    recurring: boolean;
+    remainingCycles: bigint;
+    referral: string;
+    onlyCreate: boolean;
+    deductFrom: string;
+  }
+): Promise<{
+  subscriptionId: bigint;
+  alreadyExist: boolean;
+}> => {
+  const contract = getContract(signer);
+  const contractInterface = new ethers.Interface(SUBSCRYPTS_ABI);
+
+  // Capture state before transaction
+  const stateBefore = await getSubscriptionState(contract, params.planId, params.subscriber);
+  const previousNextPaymentDate = stateBefore.nextPaymentDate;
+
+  // Execute transaction
+  const tx = await subscriptionCreate(
+    signer,
+    params.planId,
+    params.subscriber,
+    params.recurring,
+    params.remainingCycles,
+    params.referral,
+    params.onlyCreate,
+    params.deductFrom
+  );
+
+  const receipt = await tx.wait();
+
+  if (!receipt) {
+    throw new Error('Transaction receipt not available');
+  }
+
+  // Try event parsing first
+  let subscriptionId: bigint | null = null;
+  try {
+    subscriptionId = parseSubscriptionCreatedEvent(receipt, contractInterface);
+  } catch {
+    // Event parsing failed, will use fallback
+  }
+
+  // Fallback: verify via contract state
+  if (subscriptionId === null) {
+    subscriptionId = await verifySubscriptionPayment(
+      contract,
+      params.planId,
+      params.subscriber,
+      previousNextPaymentDate
+    );
+
+    if (subscriptionId === null) {
+      throw new Error(
+        `Subscription verification failed: nextPaymentDate did not change. Transaction: ${receipt.hash}`
+      );
+    }
+  }
+
+  return {
+    subscriptionId,
+    alreadyExist: previousNextPaymentDate > 0n
+  };
+};
+
+/**
+ * Create a subscription with USDC (with verification)
+ *
+ * This is a high-level wrapper that:
+ * - Captures state before transaction
+ * - Executes the USDC payment transaction
+ * - Parses events to extract subscriptionId and payment data
+ * - Falls back to state verification if event parsing fails
+ *
+ * @param signer - Ethers signer
+ * @param params - USDC payment parameters
+ * @param subscriber - Subscriber address (for verification)
+ * @returns subscriptionId, existence flag, and payment amounts
+ *
+ * @example
+ * ```typescript
+ * const result = await paySubscriptionWithUsdcVerified(signer, {
+ *   planId: 1n,
+ *   recurring: true,
+ *   remainingCycles: 12n,
+ *   referral: ethers.ZeroAddress,
+ *   feeTier: 3000n,
+ *   deadline: BigInt(Date.now() / 1000 + 1800),
+ *   nonce: 0n,
+ *   permitDeadline: BigInt(Date.now() / 1000 + 1800),
+ *   signature: '0x...',
+ *   maxUsdcIn6Cap: 10000000n
+ * }, '0xSubscriber...');
+ * ```
+ */
+export const paySubscriptionWithUsdcVerified = async (
+  signer: ethers.Signer,
+  params: {
+    planId: bigint;
+    recurring: boolean;
+    remainingCycles: bigint;
+    referral: string;
+    feeTier: bigint;
+    deadline: bigint;
+    nonce: bigint;
+    permitDeadline: bigint;
+    signature: string;
+    maxUsdcIn6Cap: bigint;
+  },
+  subscriber: string
+): Promise<{
+  subId: bigint;
+  subExist: boolean;
+  subsPaid18: bigint;
+  usdcSpent6: bigint;
+}> => {
+  const contract = getContract(signer);
+  const contractInterface = new ethers.Interface(SUBSCRYPTS_ABI);
+
+  // Capture state before transaction
+  const stateBefore = await getSubscriptionState(contract, params.planId, subscriber);
+  const previousNextPaymentDate = stateBefore.nextPaymentDate;
+
+  // Execute transaction
+  const tx = await paySubscriptionWithUsdc(
+    signer,
+    params.planId,
+    params.recurring,
+    params.remainingCycles,
+    params.referral,
+    params.feeTier,
+    params.deadline,
+    params.nonce,
+    params.permitDeadline,
+    params.signature,
+    params.maxUsdcIn6Cap
+  );
+
+  const receipt = await tx.wait();
+
+  if (!receipt) {
+    throw new Error('Transaction receipt not available');
+  }
+
+  // Try event parsing first
+  let subscriptionId: bigint | null = null;
+  let paymentData: { subsAmount18: bigint; usdcSpent6: bigint } | null = null;
+
+  try {
+    subscriptionId = parseSubscriptionCreatedEvent(receipt, contractInterface);
+    paymentData = parseUsdcPaymentEvent(receipt, contractInterface);
+  } catch {
+    // Event parsing failed, will use fallback
+  }
+
+  // Fallback: verify via contract state
+  if (subscriptionId === null) {
+    subscriptionId = await verifySubscriptionPayment(
+      contract,
+      params.planId,
+      subscriber,
+      previousNextPaymentDate
+    );
+
+    if (subscriptionId === null) {
+      throw new Error(
+        `Subscription verification failed: nextPaymentDate did not change. Transaction: ${receipt.hash}`
+      );
+    }
+  }
+
+  return {
+    subId: subscriptionId,
+    subExist: previousNextPaymentDate > 0n,
+    subsPaid18: paymentData?.subsAmount18 || 0n,
+    usdcSpent6: paymentData?.usdcSpent6 || 0n
+  };
+};

@@ -7,12 +7,12 @@
 import { useState, useCallback } from 'react';
 import { useSubscrypts } from '../../context/SubscryptsContext';
 import { PaymentMethod } from '../../types';
-import { ContractService, TokenService } from '../../services';
+import { TokenService } from '../../services';
 import { getSubscryptsContractAddress, DECIMALS, DEFAULTS, PERMIT2_ADDRESS, DEX_QUOTER_ADDRESS, USDC_ADDRESS } from '../../constants';
 import { validatePlanId, validateCycleLimit, isValidReferral } from '../../utils/validators';
 import { TransactionError, InsufficientBalanceError, ContractError } from '../../utils/errors';
 import { generatePermit2Signature } from '../../utils/permit.utils';
-import { DEX_QUOTER_ABI } from '../../contract';
+import { DEX_QUOTER_ABI, createSubscriptionVerified, paySubscriptionWithUsdcVerified } from '../../contract';
 import { ZeroAddress, Contract } from 'ethers';
 import { logger, formatLogValue } from '../../utils/logger';
 
@@ -121,7 +121,6 @@ export function useSubscribe(): UseSubscribeReturn {
       setSubscriptionId(null);
 
       try {
-        const contractService = new ContractService(subscryptsContract);
         const subscryptsAddress = getSubscryptsContractAddress(wallet.chainId!);
 
         if (params.paymentMethod === 'SUBS') {
@@ -183,8 +182,8 @@ export function useSubscribe(): UseSubscribeReturn {
 
           setTxState('subscribing');
 
-          // Create subscription
-          const result = await contractService.createSubscription({
+          // Create subscription with verification
+          const result = await createSubscriptionVerified(signer, {
             planId: BigInt(params.planId),
             subscriber: wallet.address,
             recurring: params.autoRenew,
@@ -336,13 +335,14 @@ export function useSubscribe(): UseSubscribeReturn {
           // Step 5: Call contract with valid signature and calculated amount
           setTxState('subscribing');
 
-          const result = await contractService.paySubscriptionWithUsdc(
+          const result = await paySubscriptionWithUsdcVerified(
+            signer,
             {
               planId: BigInt(params.planId),
               recurring: params.autoRenew,
               remainingCycles: BigInt(params.cycleLimit),
               referral: params.referralAddress || ZeroAddress,
-              feeTier: DEFAULTS.UNISWAP_FEE_TIER,
+              feeTier: BigInt(DEFAULTS.UNISWAP_FEE_TIER),
               deadline: deadline,
               nonce: BigInt(nonce),
               permitDeadline: deadline,
