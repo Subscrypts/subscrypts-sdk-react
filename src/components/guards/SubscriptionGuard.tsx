@@ -34,6 +34,14 @@ function useMultiPlanStatus(
     setIsLoading(true);
 
     try {
+      // Use contract.runner for read operations
+      const runner = subscryptsContract.runner;
+      if (!runner) {
+        setIsActive(false);
+        setIsLoading(false);
+        return;
+      }
+
       const now = Math.floor(Date.now() / 1000);
 
       const results = await Promise.all(
@@ -41,7 +49,7 @@ function useMultiPlanStatus(
           try {
             // STEP 1: Get subscriptionId from plan/subscriber mapping
             const planSubscription = await getPlanSubscription(
-              subscryptsContract as any,
+              runner,
               BigInt(planId),
               wallet.address!
             );
@@ -54,7 +62,7 @@ function useMultiPlanStatus(
             }
 
             // STEP 2: Get FULL subscription data with authoritative nextPaymentDate
-            const subscription = await getSubscription(subscryptsContract as any, subscriptionId);
+            const subscription = await getSubscription(runner, subscriptionId);
 
             if (!subscription) {
               return false;

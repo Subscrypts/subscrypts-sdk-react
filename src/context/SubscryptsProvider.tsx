@@ -135,10 +135,17 @@ export function SubscryptsProvider({
   const sessionReconnectAttempted = useRef(false);
 
   /**
-   * Initialize contracts when signer changes
+   * Initialize contracts when signer or provider changes
+   *
+   * CRITICAL: Use provider for contract initialization to support read operations.
+   * Ethers.js v6 requires a provider that supports 'call' operations for view functions.
+   * For write operations, hooks will use signer by connecting it to the contract.
    */
   useEffect(() => {
-    if (!signer || !walletState.chainId) {
+    // Need either provider or signer with provider for reads
+    const contractRunner = provider || signer;
+
+    if (!contractRunner || !walletState.chainId) {
       setSubscryptsContract(null);
       setSubsTokenContract(null);
       setUsdcTokenContract(null);
@@ -150,21 +157,22 @@ export function SubscryptsProvider({
       const subsAddress = getSubsTokenAddress(walletState.chainId);
       const usdcAddress = getUsdcTokenAddress(walletState.chainId);
 
+      // Initialize with provider (or signer with provider) for read operations
       setSubscryptsContract(
-        new Contract(subscryptsAddress, SUBSCRYPTS_ABI, signer)
+        new Contract(subscryptsAddress, SUBSCRYPTS_ABI, contractRunner)
       );
 
       setSubsTokenContract(
-        new Contract(subsAddress, ['function balanceOf(address) view returns (uint256)', 'function allowance(address,address) view returns (uint256)', 'function approve(address,uint256) returns (bool)'], signer)
+        new Contract(subsAddress, ['function balanceOf(address) view returns (uint256)', 'function allowance(address,address) view returns (uint256)', 'function approve(address,uint256) returns (bool)'], contractRunner)
       );
 
       setUsdcTokenContract(
-        new Contract(usdcAddress, ['function balanceOf(address) view returns (uint256)', 'function allowance(address,address) view returns (uint256)', 'function approve(address,uint256) returns (bool)'], signer)
+        new Contract(usdcAddress, ['function balanceOf(address) view returns (uint256)', 'function allowance(address,address) view returns (uint256)', 'function approve(address,uint256) returns (bool)'], contractRunner)
       );
     } catch (error) {
       console.error('Failed to initialize contracts:', error);
     }
-  }, [signer, walletState.chainId]);
+  }, [provider, signer, walletState.chainId]);
 
   /**
    * Fetch token balances

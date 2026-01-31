@@ -84,9 +84,15 @@ export function useSubscriptionStatus(
     setError(null);
 
     try {
+      // Use contract.runner for read operations (supports both provider and signer with provider)
+      const runner = subscryptsContract.runner;
+      if (!runner) {
+        throw new Error('Contract runner not available');
+      }
+
       // STEP 1: Get subscriptionId from plan/subscriber mapping
       const planSubscription = await getPlanSubscription(
-        subscryptsContract as any,
+        runner,
         BigInt(planId),
         addressToCheck
       );
@@ -107,7 +113,7 @@ export function useSubscriptionStatus(
       }
 
       // STEP 2: Get FULL subscription data with authoritative nextPaymentDate
-      const subscription = await getSubscription(subscryptsContract as any, subscriptionId);
+      const subscription = await getSubscription(runner, subscriptionId);
 
       if (!subscription) {
         setStatus({

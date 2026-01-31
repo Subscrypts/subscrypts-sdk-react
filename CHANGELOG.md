@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.1] - 2026-01-31
+
+### Fixed
+- **CRITICAL: Contract runner error preventing all read operations**
+  - Fixed "contract runner does not support calling" error in all subscription hooks
+  - **Root Cause**: Contract initialization used signer without ensuring provider support for read operations
+  - **Impact**: All read hooks (`useSubscriptionStatus`, `useMySubscriptions`, `SubscriptionGuard`) failed in v1.5.0
+  - **Symptoms**:
+    - `useSubscriptionStatus` returned `{error: "contract runner does not support calling"}`
+    - `useMySubscriptions` returned empty results
+    - Pure ethers.js calls worked, but SDK hooks failed
+  - **Fix**:
+    - Updated hooks to use `contract.runner` instead of casting contract as runner
+    - Updated `SubscryptsProvider` to initialize contracts with `provider || signer` (prioritizes provider)
+    - Added provider dependency to contract initialization useEffect
+  - **Changed Files**:
+    - `src/context/SubscryptsProvider.tsx` - Initialize contracts with provider for read support
+    - `src/hooks/subscriptions/useSubscriptionStatus.ts` - Use contract.runner for reads
+    - `src/components/guards/SubscriptionGuard.tsx` - Use contract.runner for reads
+
+### Technical Context
+
+**What Went Wrong in v1.5.0**: When v1.5.0 removed ContractService, contract instances were initialized with `signer` only. Ethers.js v6 requires a provider that supports `call` operations for view functions. Signers without providers fail read operations with "contract runner does not support calling".
+
+**v1.5.1 Fix**:
+1. Hooks use `contract.runner` to get the actual runner (provider or signer with provider)
+2. SubscryptsProvider initializes contracts with `provider || signer` to ensure provider is available
+3. Provider added to useEffect dependencies for contract initialization
+
+**Why This Works**: Provider is set before/with signer in all connection flows and supports all read operations.
+
 ## [1.5.0] - 2026-01-31
 
 ### Changed
