@@ -2,6 +2,53 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.3] - 2026-01-31
+
+### Fixed
+- **ContractService.getPlanSubscription() null check** ([contract.service.ts:44-46](src/services/contract.service.ts#L44-L46))
+  - Fixed misleading comment and logic for subscription existence check
+  - Now correctly checks `subscription.id === 0n` instead of `nextPaymentDate === 0n`
+  - Impact: LOW - dead code path, but improves code correctness and prevents future copy-paste errors
+  - Contract behavior: `getPlanSubscription()` returns partial data with default values per smart contract design
+
+### Added
+- **Passive collection documentation** (README.md)
+  - Documented automatic subscription renewal on SUBS transfers
+  - Added gas estimation guidance: 20-30% buffer recommended for SUBS transfers
+  - Explains why transfers may trigger unrelated subscription renewals
+  - New "Gas Optimization & Passive Collection" section in README
+  - Technical details: contract processes up to `subscriptionCollectPassiveMax` renewals per transfer
+
+- **Plan change warnings** (methods.ts)
+  - Added comprehensive JSDoc warning to `planChange()` about subscription disablement
+  - Documented that changing plan amount/frequency disables isRecurring and resets remainingCycles for ALL existing subscriptions
+  - Explained rationale: prevents subscribers from being charged unexpected amounts without consent
+  - Provided workaround using `planChangeSubscriptionsBulk()` for non-destructive updates
+  - Merchant integration guide for destructive vs non-destructive plan changes
+
+- **Referral validation** (validators.ts, useSubscribe.ts)
+  - Added `isValidReferral()` helper to validate referral addresses (src/utils/validators.ts)
+  - Referral must be existing subscriber to same plan per smart contract design
+  - `useSubscribe()` now logs warning if referral is invalid (contract silently ignores)
+  - Updated documentation with referral requirements and validation examples
+  - Client-side validation prevents user confusion about missing bonuses
+
+### Documentation
+- **Added gas optimization guidance to README.md**
+  - Best practices for SUBS transfer gas estimation
+  - Explanation of passive collection feature and why it exists
+  - Variable gas cost documentation with code examples
+
+- **Improved merchant integration guidance**
+  - Plan change best practices and warnings
+  - Referral validation patterns with examples
+  - Gas estimation recommendations with buffer calculations
+
+### Technical Details
+This release focuses on documentation and validation improvements based on comprehensive smart contract compatibility analysis (2026-01-31). All changes trace back to specific contract behaviors.
+
+**Compatibility Status**: SDK is contract-compatible and sound by design. This release documents behaviors that are correct but potentially unexpected for integrators.
+
 ## [1.4.2] - 2026-01-30
 
 ### Fixed

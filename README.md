@@ -263,6 +263,35 @@ function SubscribePage() {
 
 ---
 
+## ⚡ Gas Optimization & Passive Collection
+
+The Subscrypts contract includes an automatic subscription renewal feature called **Passive Collection**.
+
+### What is Passive Collection?
+
+On every SUBS token transfer, the contract automatically processes up to `subscriptionCollectPassiveMax` expired subscriptions from the network. This ensures subscriptions are renewed regularly without requiring manual collection.
+
+### Impact on Your Transactions
+
+**Gas Costs**: SUBS transfers may cost 20-30% more gas than standard ERC20 transfers due to passive collection processing.
+
+**Transaction Logs**: You may see subscription renewal events unrelated to your transfer.
+
+**Best Practice**: Always add gas buffer to SUBS transfer operations:
+
+```typescript
+const estimatedGas = await subsContract.estimateGas.transfer(to, amount);
+const gasLimit = (estimatedGas * 130n) / 100n; // 30% buffer for passive collection
+
+await subsContract.transfer(to, amount, { gasLimit });
+```
+
+### Why It Exists
+
+Passive collection is a form of "gas socialism" where all users help maintain the subscription network. Instead of requiring merchants or subscribers to manually trigger renewals, the network collectively processes them during normal token activity.
+
+---
+
 ## 🧠 Core Concepts
 
 ### Merchants and Plans
@@ -2043,12 +2072,6 @@ import { SubscryptsButton } from '@subscrypts/react-sdk';
 - `<SubscriptionGuard>` hides protected content
 - User is redirected to `fallbackUrl` (if provided)
 - No automatic charges (unless auto-renewal is enabled)
-
----
-
-### Q: Can I offer free trials?
-
-**A:** Yes! Create a plan with 0 cost for the first cycle, then normal cost for subsequent cycles. Configure this in your Subscrypts merchant dashboard.
 
 ---
 

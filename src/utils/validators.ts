@@ -2,7 +2,7 @@
  * Input validation utilities
  */
 
-import { isAddress, getAddress } from 'ethers';
+import { isAddress, getAddress, Contract } from 'ethers';
 import { ValidationError } from './errors';
 
 /**
@@ -68,5 +68,48 @@ export function validateCycleLimit(cycles: number): void {
 
   if (cycles > 1000) {
     throw new ValidationError('cycleLimit', 'Cycle limit cannot exceed 1000');
+  }
+}
+
+/**
+ * Validate referral address for a plan
+ *
+ * Referral addresses must be existing subscribers to the same plan to receive
+ * referral bonuses. Invalid referrals are silently ignored by the contract
+ * (no error, no bonus applied).
+ *
+ * Contract requirement: facetSubscription.sol lines 196-198
+ *
+ * @param contract - Subscrypts contract instance
+ * @param planId - Plan ID to check
+ * @param referralAddress - Referral address to validate
+ * @returns true if referral is valid (subscribed to plan), false otherwise
+ *
+ * @example
+ * ```typescript
+ * const isValid = await isValidReferral(contract, '1', '0x123...');
+ * if (!isValid) {
+ *   console.warn('Referral address is not subscribed to this plan');
+ * }
+ * ```
+ */
+export async function isValidReferral(
+  contract: Contract,
+  planId: string | bigint,
+  referralAddress: string
+): Promise<boolean> {
+  try {
+    const planIdBigInt = typeof planId === 'string' ? BigInt(planId) : planId;
+
+    // Check if referral is subscribed to this plan
+    const subscription = await contract.getPlanSubscription(
+      planIdBigInt,
+      referralAddress
+    );
+
+    // Valid if subscription exists (id > 0)
+    return subscription && subscription.id > 0n;
+  } catch {
+    return false;
   }
 }

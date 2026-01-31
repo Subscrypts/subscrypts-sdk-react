@@ -41,8 +41,8 @@ export class ContractService {
         subscriber
       );
 
-      // Check if subscription exists (nextPaymentDate > 0 indicates active subscription)
-      if (subscription.nextPaymentDate === 0n) {
+      // Check if subscription exists (id === 0 means no subscription)
+      if (subscription.id === 0n) {
         return null;
       }
 

@@ -127,6 +127,54 @@ export const transferOwnership = async (signer: ethers.Signer, newOwner: string)
 //           SUBSCRIPTION & PLANS
 // ==========================================
 
+/**
+ * Change plan parameters
+ *
+ * ⚠️ **WARNING - DESTRUCTIVE OPERATION**: Changing `amount` or `frequency` will
+ * automatically disable recurring payment configuration to ALL existing subscriptions
+ * to this plan. Subscribers will need to manually re-configure the recurring payments
+ * with the new parameters.
+ *
+ * **Why This Design**: Prevents subscribers from being charged unexpected amounts
+ * without explicit consent. Protects both merchant (can change pricing) and
+ * subscriber (won't be auto-charged new amount).
+ *
+ * **Contract behavior**: facetSubscription.sol lines 352-355
+ *
+ * @param signer - Wallet signer (must be plan owner)
+ * @param planId - Plan ID to modify
+ * @param merchant - Merchant address (must match plan owner)
+ * @param amount - New subscription amount (⚠️ changing this disables all subscriptions)
+ * @param frequency - New payment frequency (⚠️ changing this disables all subscriptions)
+ * @param referralBonus - Referral reward amount
+ * @param commission - Protocol commission
+ * @param description - Plan description (bytes32)
+ * @param setAttribute - Default attributes (bytes32)
+ * @param verifExpDate - Verification expiry timestamp
+ * @param active - Plan active status
+ *
+ * @example
+ * ```typescript
+ * // WARNING: This will disable isRecurring and reset remainingCycles
+ * // for ALL existing subscriptions
+ * await planChange(
+ *   signer,
+ *   1n,                    // planId
+ *   merchantAddress,
+ *   parseEther('10'),     // NEW amount (was 5 SUBS)
+ *   2592000n,             // frequency (30 days)
+ *   parseEther('1'),      // referralBonus
+ *   500n,                 // 5% commission
+ *   'Premium Plan',
+ *   '',
+ *   0n,
+ *   true
+ * );
+ * // All subscribers must now re-enable recurring payments
+ * ```
+ *
+ * @see planChangeSubscriptionsBulk for non-destructive bulk updates
+ */
 export const planChange = async (signer: ethers.Signer, planId: bigint, merchant: string, amount: bigint, frequency: bigint, referralBonus: bigint, commission: bigint, description: string, setAttribute: string, verifExpDate: bigint, active: boolean) => {
   const contract = getContract(signer);
   const descBytes = bytes32Encode(description);

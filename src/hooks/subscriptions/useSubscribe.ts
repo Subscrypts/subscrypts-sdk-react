@@ -9,7 +9,7 @@ import { useSubscrypts } from '../../context/SubscryptsContext';
 import { PaymentMethod } from '../../types';
 import { ContractService, TokenService } from '../../services';
 import { getSubscryptsContractAddress, DECIMALS, DEFAULTS, PERMIT2_ADDRESS, DEX_QUOTER_ADDRESS, USDC_ADDRESS } from '../../constants';
-import { validatePlanId, validateCycleLimit } from '../../utils/validators';
+import { validatePlanId, validateCycleLimit, isValidReferral } from '../../utils/validators';
 import { TransactionError, InsufficientBalanceError, ContractError } from '../../utils/errors';
 import { generatePermit2Signature } from '../../utils/permit.utils';
 import { DEX_QUOTER_ABI } from '../../contract';
@@ -160,6 +160,27 @@ export function useSubscribe(): UseSubscribeReturn {
             logger.warn('Allowance check warning (continuing):', err);
           }
 
+          // Validate referral address if provided
+          if (params.referralAddress && params.referralAddress !== ZeroAddress) {
+            logger.info('Validating referral address...');
+
+            const isValid = await isValidReferral(
+              subscryptsContract,
+              params.planId,
+              params.referralAddress
+            );
+
+            if (!isValid) {
+              logger.warn(
+                `Referral address is not a subscriber to this plan: ${params.referralAddress} - Referral bonus will NOT be applied by the contract`
+              );
+              // Don't fail - contract will silently ignore invalid referral
+              // Just log warning for developer awareness
+            } else {
+              logger.debug('Referral address validated successfully');
+            }
+          }
+
           setTxState('subscribing');
 
           // Create subscription
@@ -290,6 +311,27 @@ export function useSubscribe(): UseSubscribeReturn {
             deadline: deadline.toString(),
             signatureLength: signature.length
           });
+
+          // Validate referral address if provided
+          if (params.referralAddress && params.referralAddress !== ZeroAddress) {
+            logger.info('Validating referral address...');
+
+            const isValid = await isValidReferral(
+              subscryptsContract,
+              params.planId,
+              params.referralAddress
+            );
+
+            if (!isValid) {
+              logger.warn(
+                `Referral address is not a subscriber to this plan: ${params.referralAddress} - Referral bonus will NOT be applied by the contract`
+              );
+              // Don't fail - contract will silently ignore invalid referral
+              // Just log warning for developer awareness
+            } else {
+              logger.debug('Referral address validated successfully');
+            }
+          }
 
           // Step 5: Call contract with valid signature and calculated amount
           setTxState('subscribing');
