@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.2] - 2026-01-31
+
+### Fixed
+- **useMySubscriptions returning empty results despite active subscriptions**
+  - Optimized hook with smart fallback strategy for contract limitation
+  - **Root Cause**: Contract's `getSubscriptionsByAddress` relies on `subscriberSubscriptions` mapping which may not be properly populated, causing the function to return empty arrays even when subscriptions exist
+  - **Impact**: `useMySubscriptions` returned 0 subscriptions when user had active subscriptions
+  - **Symptoms**:
+    - `useSubscriptionStatus('1')` returned `{isActive: true}` ✅
+    - `useMySubscriptions()` returned `{subscriptionCount: 0}` ❌
+    - Manual loop through `getPlanSubscription` found subscriptions ✅
+  - **Fix**: Implemented three-layer strategy for optimal performance + reliability
+  - **Changed Files**:
+    - `src/hooks/subscriptions/useMySubscriptions.ts` - Smart fallback with planIds filtering
+
+### Strategy
+
+```typescript
+// Get all subscriptions (up to 100, efficient 1 RPC call)
+const { subscriptions } = useMySubscriptions();
+
+// Filter to specific plans + automatic fallback if contract returns empty
+const { subscriptions } = useMySubscriptions(undefined, 10, ['1', '2', '3']);
+```
+
+**How it works:**
+1. **PRIMARY**: Calls `getSubscriptionsByAddress(0, 100)` - fetches up to 100 subscriptions (1 RPC call)
+2. **FILTER**: If `planIds` specified, filters results client-side to only include those plans
+3. **FALLBACK**: If returns empty AND `planIds` provided, loops through plans using `getPlanSubscription` (slower but reliable)
+
+This optimizes for the best case (contract working = 1 call, most users have <100 subs) while gracefully handling the broken case.
+
+### Technical Context
+
+**Contract Limitation**: The `getSubscriptionsByAddress(subscriber, start, end)` function queries the `subscriberSubscriptions` mapping which should contain subscription IDs for each subscriber. If this mapping is not populated during subscription creation (potential contract implementation issue), the function returns empty arrays despite subscriptions existing in the `PlanSubscription` mapping.
+
+**Performance**: The new approach is optimized for efficiency:
+- Best case (contract works): 1 RPC call for all subscriptions
+- Worst case (contract broken): N RPC calls where N = number of planIds (only when planIds specified)
+- Client-side filtering is free and handles most merchant use cases
+
+**Proven Workaround**: Using `getPlanSubscription(planId, subscriber)` followed by `getSubscription(subscriptionId)` is reliable because it queries the `PlanSubscription` mapping directly, which is correctly populated during subscription creation.
+
 ## [1.5.1] - 2026-01-31
 
 ### Fixed

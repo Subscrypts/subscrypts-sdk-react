@@ -1359,6 +1359,7 @@ plans.forEach(plan => {
 **Fetch paginated subscriptions** for the connected wallet.
 
 ```tsx
+// Get all subscriptions (up to 100)
 const {
   subscriptions,
   page,
@@ -1367,6 +1368,12 @@ const {
   prevPage,
   isLoading
 } = useMySubscriptions();
+
+// Filter to specific plans (recommended for reliability)
+const {
+  subscriptions,
+  isLoading
+} = useMySubscriptions(undefined, 10, ['1', '2', '3']);
 
 return (
   <div>
@@ -1378,6 +1385,12 @@ return (
   </div>
 );
 ```
+
+**Parameters:**
+
+- `address?: string` - Optional wallet address (defaults to connected wallet)
+- `pageSize?: number` - Subscriptions per page (default: 10)
+- `planIds?: string[]` - Optional plan IDs to filter (v1.5.2+, enables automatic fallback if contract returns empty)
 
 **Returns:**
 

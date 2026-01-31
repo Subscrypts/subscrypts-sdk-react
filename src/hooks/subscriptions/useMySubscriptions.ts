@@ -2,12 +2,39 @@
  * useMySubscriptions Hook
  *
  * Fetch paginated subscriptions for the connected wallet address.
+ *
+ * STRATEGY:
+ * 1. PRIMARY: Calls getSubscriptionsByAddress(0, 100) for all subscriptions (1 RPC call - efficient)
+ * 2. FILTER: If planIds specified, filters results to only include those plans
+ * 3. FALLBACK: If empty results + planIds provided, loops through plans using getPlanSubscription (reliable but slower)
+ *
+ * This optimizes for the best case (contract working = 1 call) while handling the broken case.
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSubscrypts } from '../../context/SubscryptsContext';
-import { Subscription } from '../../types';
-import { getSubscriptionsByAddress } from '../../contract';
+import { Subscription, ContractSubscription } from '../../types';
+import { getSubscriptionsByAddress, getPlanSubscription, getSubscription } from '../../contract';
+
+/**
+ * Transform contract subscription data to SDK Subscription type
+ */
+function transformContractSubscription(contractSub: ContractSubscription): Subscription {
+  return {
+    id: contractSub.id.toString(),
+    merchantAddress: contractSub.merchantAddress,
+    planId: contractSub.planId.toString(),
+    subscriber: contractSub.subscriberAddress,
+    currencyCode: contractSub.currencyCode,
+    subscriptionAmount: contractSub.subscriptionAmount,
+    paymentFrequency: contractSub.paymentFrequency,
+    isAutoRenewing: contractSub.isRecurring,
+    remainingCycles: Number(contractSub.remainingCycles),
+    customAttributes: contractSub.customAttributes,
+    lastPaymentDate: new Date(Number(contractSub.lastPaymentDate) * 1000),
+    nextPaymentDate: new Date(Number(contractSub.nextPaymentDate) * 1000)
+  };
+}
 
 /**
  * Hook return type
@@ -40,25 +67,29 @@ export interface UseMySubscriptionsReturn {
  *
  * @param address - Optional address to fetch subscriptions for (defaults to connected wallet)
  * @param pageSize - Number of subscriptions per page (default: 10)
+ * @param planIds - Optional array of plan IDs to check (recommended for reliability)
  *
  * @example
  * ```tsx
- * const { subscriptions, page, hasMore, nextPage, prevPage, isLoading } = useMySubscriptions();
+ * // Get all subscriptions (tries getSubscriptionsByAddress, up to 100 subs)
+ * const { subscriptions, isLoading } = useMySubscriptions();
+ *
+ * // Filter to specific plans + fallback if getSubscriptionsByAddress fails
+ * const { subscriptions, isLoading } = useMySubscriptions(undefined, 10, ['1', '2', '3']);
  *
  * if (isLoading) return <Spinner />;
  *
  * return (
  *   <div>
  *     {subscriptions.map(sub => <SubscriptionCard key={sub.id} subscription={sub} />)}
- *     <button onClick={prevPage} disabled={page === 1}>Previous</button>
- *     <button onClick={nextPage} disabled={!hasMore}>Next</button>
  *   </div>
  * );
  * ```
  */
 export function useMySubscriptions(
   address?: string,
-  pageSize: number = 10
+  pageSize: number = 10,
+  planIds?: string[]
 ): UseMySubscriptionsReturn {
   const { provider, wallet } = useSubscrypts();
 
@@ -91,16 +122,51 @@ export function useMySubscriptions(
     setError(null);
 
     try {
-      // Calculate 1-indexed start/end for contract call
-      const start = BigInt((page - 1) * pageSize + 1);
-      const end = BigInt(page * pageSize);
+      // PRIMARY METHOD: Try getSubscriptionsByAddress first (most efficient - 1 RPC call)
+      // Fetch up to 100 subscriptions (handles most use cases)
+      const result = await getSubscriptionsByAddress(provider, targetAddress, 0n, 100n);
+      const [subs] = result;
 
-      // getSubscriptionsByAddress returns [subs[], startIdx, endIdx, totalLength]
-      const result = await getSubscriptionsByAddress(provider, targetAddress, start, end);
-      const [subs, , , totalLength] = result;
+      // Transform contract subscriptions to SDK Subscription type
+      let allSubs = (subs as ContractSubscription[]).map(transformContractSubscription);
 
-      setSubscriptions(subs as Subscription[]);
-      setTotal(Number(totalLength));
+      // FALLBACK: If getSubscriptionsByAddress returns empty but we have planIds to check
+      // This handles the case where contract's subscriberSubscriptions mapping isn't populated
+      if (allSubs.length === 0 && planIds && planIds.length > 0) {
+        console.warn('getSubscriptionsByAddress returned empty, falling back to plan loop method');
+
+        // Check each plan individually (slower but reliable)
+        for (const planId of planIds) {
+          try {
+            const planSub = await getPlanSubscription(provider, BigInt(planId), targetAddress);
+
+            if (planSub && planSub.id && planSub.id !== 0n) {
+              // Get full subscription data
+              const fullSub = await getSubscription(provider, planSub.id);
+
+              if (fullSub) {
+                allSubs.push(transformContractSubscription(fullSub as ContractSubscription));
+              }
+            }
+          } catch (planErr) {
+            // Skip plans that error (might not exist)
+            console.warn(`Failed to fetch subscription for plan ${planId}:`, planErr);
+          }
+        }
+      }
+
+      // FILTER: If planIds specified, filter results to only include those plans
+      if (planIds && planIds.length > 0 && allSubs.length > 0) {
+        allSubs = allSubs.filter(sub => planIds.includes(sub.planId));
+      }
+
+      // Apply pagination to results
+      const startIdx = (page - 1) * pageSize;
+      const endIdx = page * pageSize;
+      const paginatedSubs = allSubs.slice(startIdx, endIdx);
+
+      setSubscriptions(paginatedSubs);
+      setTotal(allSubs.length);
       setIsLoading(false);
     } catch (err) {
       setError(err as Error);
@@ -108,7 +174,7 @@ export function useMySubscriptions(
       setSubscriptions([]);
       setTotal(0);
     }
-  }, [provider, targetAddress, page, pageSize]);
+  }, [provider, targetAddress, page, pageSize, planIds]);
 
   /**
    * Fetch on mount and when dependencies change
