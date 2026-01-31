@@ -317,7 +317,7 @@ export const upgradeToAndCall = async (signer: ethers.Signer, newImpl: string, d
 // ==========================================
 
 // Helper for cleaning Plan structs (decoding bytes32)
-const cleanPlan = (p: any) => {
+export const cleanPlan = (p: any) => {
   return {
     id: p.id,
     merchantAddress: p.merchantAddress,
@@ -335,7 +335,7 @@ const cleanPlan = (p: any) => {
 };
 
 // Helper for cleaning Subscription structs
-const cleanSub = (s: any) => {
+export const cleanSub = (s: any) => {
   return {
     id: s.id,
     merchantAddress: s.merchantAddress,

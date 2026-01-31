@@ -10,7 +10,7 @@ import {
   SubscriptionCreateResult,
   PayWithUsdcResult
 } from '../types';
-import { SUBSCRYPTS_ABI } from '../contract';
+import { SUBSCRYPTS_ABI, cleanSub } from '../contract';
 import { ContractError } from '../utils/errors';
 import { logger, formatLogValue } from '../utils/logger';
 
@@ -46,7 +46,7 @@ export class ContractService {
         return null;
       }
 
-      return subscription;
+      return cleanSub(subscription);
     } catch (error) {
       throw new ContractError(
         `Failed to fetch subscription for plan ${planId}`,
@@ -72,7 +72,7 @@ export class ContractService {
         return null;
       }
 
-      return subscription;
+      return cleanSub(subscription);
     } catch (error) {
       throw new ContractError(
         `Failed to fetch subscription ${subscriptionId}`,

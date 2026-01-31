@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.4] - 2026-01-31
+
+### Fixed
+- **CRITICAL: SDK hooks returning incorrect subscription data**
+  - Fixed data transformation bug in ContractService methods
+  - **Root Cause**: ContractService was returning raw ethers.js Proxy arrays instead of clean JavaScript objects with named properties
+  - **Impact**: `useSubscriptionStatus` returned `{isActive: false}` for valid subscriptions, `useMySubscriptions` showed 0 subscriptions
+  - **Symptoms**: Direct contract queries worked, but React hooks failed to process data correctly
+  - **Fix**: Export and use existing `cleanSub()` helper from methods.ts in ContractService
+  - **Changed Files**:
+    - [src/contract/methods.ts](src/contract/methods.ts) - Exported `cleanSub()` and `cleanPlan()` helper functions
+    - [src/services/contract.service.ts](src/services/contract.service.ts) - Import and use cleanSub in `getPlanSubscription()` and `getSubscription()`
+  - **Technical Details**: ethers.js returns struct data as Proxy objects with indexed properties. When these flow through React state, the Proxy behavior can be lost, causing property access to fail. The `cleanSub()` helper transforms Proxy arrays to proper JavaScript objects with named properties.
+
+### Technical Context
+This bug was introduced when ContractService was created without using the data transformation helpers that already existed in methods.ts. The `cleanSub()` helper has been used successfully by all methods.ts functions since the beginning, but ContractService bypassed it by calling the contract directly.
+
+- **Why It Worked in methods.ts**: All view functions use `cleanSub()` to transform contract responses
+- **Why It Failed in ContractService**: ContractService returned raw Proxy arrays without transformation
+- **Why It Matters**: React hooks depend on stable object properties, Proxy behavior is not guaranteed across state updates
+
 ## [1.4.3] - 2026-01-31
 
 ### Fixed
