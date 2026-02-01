@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSubscrypts } from '../../context/SubscryptsContext';
-import { SubscriptionStatus } from '../../types';
+import { SubscriptionStatus, ContractSubscription } from '../../types';
 import { getPlanSubscription, getSubscription } from '../../contract';
 import { validatePlanId } from '../../utils/validators';
 
@@ -46,7 +46,7 @@ export function useSubscriptionStatus(
   planId: string,
   subscriber?: string
 ): UseSubscriptionStatusReturn {
-  const { subscryptsContract, wallet } = useSubscrypts();
+  const { subscryptsContract, wallet, cacheManager } = useSubscrypts();
 
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -80,6 +80,12 @@ export function useSubscriptionStatus(
       return;
     }
 
+    if (!cacheManager) {
+      setError(new Error('Cache manager not initialized'));
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -90,38 +96,51 @@ export function useSubscriptionStatus(
         throw new Error('Contract runner not available');
       }
 
-      // STEP 1: Get subscriptionId from plan/subscriber mapping
-      const planSubscription = await getPlanSubscription(
-        runner,
-        BigInt(planId),
-        addressToCheck
+      const cacheKey = `subscription-status:${planId}:${addressToCheck}`;
+
+      // Calculate smart TTL based on subscription expiration
+      const getSmartTTL = (subscription: ContractSubscription | null): number => {
+        if (!subscription || !subscription.nextPaymentDate) return 30_000; // Default 30s
+
+        const now = Math.floor(Date.now() / 1000);
+        const expiresIn = Number(subscription.nextPaymentDate) - now;
+
+        if (expiresIn < 300) return 10_000; // Expires soon: 10s TTL
+        if (expiresIn < 3600) return 30_000; // Expires in <1hr: 30s TTL
+        return 60_000; // Expires later: 60s TTL
+      };
+
+      // Fetch subscription data with caching
+      const result = await cacheManager.get(
+        cacheKey,
+        async () => {
+          // STEP 1: Get subscriptionId from plan/subscriber mapping
+          const planSub = await getPlanSubscription(runner, BigInt(planId), addressToCheck);
+          if (!planSub || planSub.id === 0n) return null;
+
+          // STEP 2: Get FULL subscription data with authoritative nextPaymentDate
+          return await getSubscription(runner, planSub.id);
+        },
+        undefined // Use default TTL initially, will be updated below
       );
 
-      // Extract subscriptionId
-      const subscriptionId = planSubscription?.id ?? 0n;
+      // Update cache with smart TTL based on the result
+      if (result) {
+        cacheManager.set(cacheKey, result, getSmartTTL(result as ContractSubscription));
+      }
 
-      if (subscriptionId === 0n || !planSubscription) {
+      const subscription = result as ContractSubscription | null;
+
+      // Extract subscriptionId
+      const subscriptionId = subscription?.id ?? 0n;
+
+      if (subscriptionId === 0n || !subscription) {
         setStatus({
           isActive: false,
           expirationDate: null,
           isAutoRenewing: false,
           remainingCycles: 0,
           subscriptionId: null
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // STEP 2: Get FULL subscription data with authoritative nextPaymentDate
-      const subscription = await getSubscription(runner, subscriptionId);
-
-      if (!subscription) {
-        setStatus({
-          isActive: false,
-          expirationDate: null,
-          isAutoRenewing: false,
-          remainingCycles: 0,
-          subscriptionId: subscriptionId.toString()
         });
         setIsLoading(false);
         return;
@@ -146,7 +165,7 @@ export function useSubscriptionStatus(
       setIsLoading(false);
       setStatus(null);
     }
-  }, [subscryptsContract, planId, addressToCheck]);
+  }, [subscryptsContract, planId, addressToCheck, cacheManager]);
 
   /**
    * Fetch on mount and when dependencies change

@@ -110,6 +110,12 @@ export const ERROR_CODE_MAP: Record<string, ErrorMessageConfig> = {
     message: 'The provided input is invalid.',
     suggestion: 'Please check your input values and try again.',
     isRetryable: false
+  },
+  SANCTIONS_ERROR: {
+    title: 'Address Sanctioned',
+    message: 'This wallet address is sanctioned and cannot be used for subscriptions.',
+    suggestion: 'This address has been flagged by compliance systems. Contact support if you believe this is an error.',
+    isRetryable: false
   }
 };
 

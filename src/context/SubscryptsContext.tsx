@@ -6,6 +6,7 @@ import { createContext, useContext } from 'react';
 import { BrowserProvider, Signer, Contract } from 'ethers';
 import { NetworkConfig, WalletState } from '../types';
 import type { WalletConnector, ConnectorId } from '../wallet/types';
+import type { CacheManager } from '../services/cache.service';
 
 /**
  * Context value type
@@ -29,6 +30,9 @@ export interface SubscryptsContextValue {
   subsBalance: bigint | null;
   usdcBalance: bigint | null;
   refreshBalances: () => Promise<void>;
+
+  // Cache
+  cacheManager: CacheManager;
 
   // Actions (only available if internal wallet management is enabled)
   connect?: () => Promise<void>;

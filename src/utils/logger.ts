@@ -14,6 +14,12 @@ export interface LoggerConfig {
   prefix?: string;
 }
 
+export interface PerformanceMetric {
+  operation: string;
+  duration: number;
+  timestamp: number;
+}
+
 const LOG_STYLES = {
   info: 'color: #3B82F6; font-weight: bold;',      // Blue
   debug: 'color: #8B5CF6; font-weight: bold;',     // Purple
@@ -25,6 +31,8 @@ const LOG_STYLES = {
 class SubscryptsLogger {
   private level: LogLevel = 'info';
   private prefix = '[Subscrypts]';
+  private performanceMetrics: PerformanceMetric[] = [];
+  private correlationIdCounter = 0;
 
   configure(config: Partial<LoggerConfig>) {
     if (config.level !== undefined) this.level = config.level;
@@ -33,6 +41,54 @@ class SubscryptsLogger {
 
   getLevel(): LogLevel {
     return this.level;
+  }
+
+  /**
+   * Generate unique correlation ID for tracing related operations
+   */
+  generateCorrelationId(): string {
+    return `${Date.now()}-${++this.correlationIdCounter}`;
+  }
+
+  /**
+   * Track performance of async operations (debug mode only)
+   */
+  async trackPerformance<T>(
+    operation: string,
+    fn: () => Promise<T>
+  ): Promise<T> {
+    if (this.level !== 'debug') {
+      return fn(); // Skip tracking if not in debug mode
+    }
+
+    const start = performance.now();
+    try {
+      const result = await fn();
+      const duration = performance.now() - start;
+
+      this.performanceMetrics.push({ operation, duration, timestamp: Date.now() });
+      this.debug(`⏱️ ${operation}: ${duration.toFixed(2)}ms`);
+
+      return result;
+    } catch (error) {
+      const duration = performance.now() - start;
+      this.debug(`⏱️ ${operation}: ${duration.toFixed(2)}ms (failed)`);
+      throw error;
+    }
+  }
+
+  /**
+   * Get performance metrics (debug mode only)
+   */
+  getPerformanceMetrics(): PerformanceMetric[] {
+    return [...this.performanceMetrics];
+  }
+
+  /**
+   * Clear performance metrics
+   */
+  clearMetrics(): void {
+    this.performanceMetrics = [];
   }
 
   private shouldLog(minLevel: LogLevel): boolean {

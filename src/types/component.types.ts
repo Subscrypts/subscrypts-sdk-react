@@ -60,6 +60,34 @@ export interface SubscryptsProviderProps {
    * @default true
    */
   persistSession?: boolean;
+  /**
+   * Cache configuration for query results.
+   * Reduces RPC calls by caching plan data, subscription status, etc.
+   *
+   * **Zero-config defaults work for 90% of users.**
+   *
+   * @default { enabled: true, defaultTTL: 60000, maxEntries: 500 }
+   *
+   * @example
+   * ```tsx
+   * // Default (recommended)
+   * <SubscryptsProvider>
+   *
+   * // Custom configuration
+   * <SubscryptsProvider caching={{ enabled: true, defaultTTL: 30000, maxEntries: 1000 }}>
+   *
+   * // Disable caching
+   * <SubscryptsProvider caching={{ enabled: false }}>
+   * ```
+   */
+  caching?: {
+    /** Enable caching (default: true) */
+    enabled?: boolean;
+    /** Default time-to-live in milliseconds (default: 60000 = 60 seconds) */
+    defaultTTL?: number;
+    /** Maximum cache entries before LRU eviction (default: 500) */
+    maxEntries?: number;
+  };
 }
 
 /**

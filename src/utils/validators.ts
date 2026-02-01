@@ -113,3 +113,48 @@ export async function isValidReferral(
     return false;
   }
 }
+
+/**
+ * Check if an address is sanctioned
+ *
+ * Pre-flight check before subscription creation to prevent wasted gas.
+ * Uses contract's subCheckSanctions method which queries Chainalysis oracle.
+ *
+ * **Fail-open pattern**: If the check fails (contract error, oracle unavailable),
+ * returns false for both addresses to allow the transaction. This prevents breaking
+ * existing integrations where sanctions checking might not be enabled.
+ *
+ * @param contract - Subscrypts contract instance
+ * @param merchantAddress - Merchant address to check
+ * @param subscriberAddress - Subscriber address to check
+ * @returns Promise<{ merchantSanctioned: boolean, subscriberSanctioned: boolean }>
+ *
+ * @example
+ * ```typescript
+ * const result = await checkSanctions(contract, merchantAddr, subscriberAddr);
+ * if (result.merchantSanctioned) {
+ *   throw new SanctionsError(merchantAddr, true);
+ * }
+ * if (result.subscriberSanctioned) {
+ *   throw new SanctionsError(subscriberAddr, false);
+ * }
+ * ```
+ */
+export async function checkSanctions(
+  contract: Contract,
+  merchantAddress: string,
+  subscriberAddress: string
+): Promise<{ merchantSanctioned: boolean; subscriberSanctioned: boolean }> {
+  try {
+    const [merchantSanctioned, subscriberSanctioned] = await contract.subCheckSanctions(
+      merchantAddress,
+      subscriberAddress
+    );
+    return { merchantSanctioned, subscriberSanctioned };
+  } catch (error) {
+    // If sanctions check fails (contract not enabled), allow transaction
+    // This prevents breaking existing contracts that don't have sanctions enabled
+    console.warn('Sanctions check failed, allowing transaction:', error);
+    return { merchantSanctioned: false, subscriberSanctioned: false };
+  }
+}

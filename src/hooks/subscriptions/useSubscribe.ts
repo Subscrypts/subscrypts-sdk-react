@@ -9,8 +9,8 @@ import { useSubscrypts } from '../../context/SubscryptsContext';
 import { PaymentMethod } from '../../types';
 import { TokenService } from '../../services';
 import { getSubscryptsContractAddress, DECIMALS, DEFAULTS, PERMIT2_ADDRESS, DEX_QUOTER_ADDRESS, USDC_ADDRESS } from '../../constants';
-import { validatePlanId, validateCycleLimit, isValidReferral } from '../../utils/validators';
-import { TransactionError, InsufficientBalanceError, ContractError } from '../../utils/errors';
+import { validatePlanId, validateCycleLimit, isValidReferral, checkSanctions } from '../../utils/validators';
+import { TransactionError, InsufficientBalanceError, ContractError, SanctionsError } from '../../utils/errors';
 import { generatePermit2Signature } from '../../utils/permit.utils';
 import { DEX_QUOTER_ABI, createSubscriptionVerified, paySubscriptionWithUsdcVerified } from '../../contract';
 import { ZeroAddress, Contract } from 'ethers';
@@ -73,7 +73,7 @@ export interface UseSubscribeReturn {
  * ```
  */
 export function useSubscribe(): UseSubscribeReturn {
-  const { subscryptsContract, subsTokenContract, usdcTokenContract, wallet, signer } = useSubscrypts();
+  const { subscryptsContract, subsTokenContract, usdcTokenContract, wallet, signer, cacheManager } = useSubscrypts();
 
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [txState, setTxState] = useState<UseSubscribeReturn['txState']>('idle');
@@ -126,6 +126,28 @@ export function useSubscribe(): UseSubscribeReturn {
         if (params.paymentMethod === 'SUBS') {
           // SUBS payment flow
           logger.info('Starting SUBS payment flow');
+
+          // Sanctions pre-flight check
+          logger.info('Checking sanctions status...');
+          const plan = await subscryptsContract.getPlan(BigInt(params.planId));
+          const sanctionsResult = await checkSanctions(
+            subscryptsContract,
+            plan.merchantAddress,
+            wallet.address
+          );
+
+          if (sanctionsResult.merchantSanctioned) {
+            logger.error('Merchant address is sanctioned');
+            throw new SanctionsError(plan.merchantAddress, true, { planId: params.planId });
+          }
+
+          if (sanctionsResult.subscriberSanctioned) {
+            logger.error('Subscriber address is sanctioned');
+            throw new SanctionsError(wallet.address, false, { planId: params.planId });
+          }
+
+          logger.debug('Sanctions check passed');
+
           const subsService = new TokenService(
             subsTokenContract.target as string,
             signer,
@@ -198,6 +220,12 @@ export function useSubscribe(): UseSubscribeReturn {
           setTxState('success');
           setIsSubscribing(false);
 
+          // Auto-invalidate cache after successful subscription
+          logger.debug('Auto-invalidating cache after successful subscription');
+          cacheManager.invalidate('my-subscriptions:'); // Clear user's subscriptions list
+          cacheManager.invalidate(`subscription-status:${params.planId}:`); // Clear this plan's status checks
+          logger.debug('Cache invalidated successfully');
+
           logger.success(`Subscription ID: ${subId}`);
           logger.groupEnd();
 
@@ -230,6 +258,26 @@ export function useSubscribe(): UseSubscribeReturn {
             subscriptionAmount: plan.subscriptionAmount,
             currencyCode: plan.currencyCode
           }));
+
+          // Sanctions pre-flight check
+          logger.info('Checking sanctions status...');
+          const sanctionsResult = await checkSanctions(
+            subscryptsContract,
+            plan.merchantAddress,
+            wallet.address
+          );
+
+          if (sanctionsResult.merchantSanctioned) {
+            logger.error('Merchant address is sanctioned');
+            throw new SanctionsError(plan.merchantAddress, true, { planId: params.planId });
+          }
+
+          if (sanctionsResult.subscriberSanctioned) {
+            logger.error('Subscriber address is sanctioned');
+            throw new SanctionsError(wallet.address, false, { planId: params.planId });
+          }
+
+          logger.debug('Sanctions check passed');
 
           // Calculate required SUBS (handle both SUBS and USD-denominated plans)
           let requiredSubs18 = plan.subscriptionAmount;
@@ -356,6 +404,12 @@ export function useSubscribe(): UseSubscribeReturn {
           setSubscriptionId(subId);
           setTxState('success');
           setIsSubscribing(false);
+
+          // Auto-invalidation cache after successful subscription
+          logger.debug('Auto-invalidating cache after successful subscription');
+          cacheManager.invalidate('my-subscriptions:'); // Clear user's subscriptions list
+          cacheManager.invalidate(`subscription-status:${params.planId}:`); // Clear this plan's status checks
+          logger.debug('Cache invalidated successfully');
 
           logger.success(`Subscription ID: ${subId}`);
           logger.groupEnd();

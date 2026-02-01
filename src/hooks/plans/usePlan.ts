@@ -41,7 +41,7 @@ export interface UsePlanReturn {
  * ```
  */
 export function usePlan(planId: string): UsePlanReturn {
-  const { provider } = useSubscrypts();
+  const { provider, cacheManager } = useSubscrypts();
 
   const [plan, setPlan] = useState<Plan | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -60,7 +60,7 @@ export function usePlan(planId: string): UsePlanReturn {
       return;
     }
 
-    if (!provider) {
+    if (!provider || !cacheManager) {
       setError(new Error('Provider not initialized'));
       setIsLoading(false);
       return;
@@ -70,7 +70,12 @@ export function usePlan(planId: string): UsePlanReturn {
     setError(null);
 
     try {
-      const result = await getPlan(provider, BigInt(planId));
+      const cacheKey = `plan:${planId}`;
+      const result = await cacheManager.get(
+        cacheKey,
+        () => getPlan(provider, BigInt(planId)),
+        -1 // Infinite TTL - plans are static
+      );
       setPlan(result as Plan);
       setIsLoading(false);
     } catch (err) {
@@ -78,7 +83,7 @@ export function usePlan(planId: string): UsePlanReturn {
       setIsLoading(false);
       setPlan(null);
     }
-  }, [provider, planId]);
+  }, [provider, planId, cacheManager]);
 
   /**
    * Fetch on mount and when dependencies change

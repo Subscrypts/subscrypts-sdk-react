@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Contract, Signer } from 'ethers';
 import { SubscryptsContext, SubscryptsContextValue } from './SubscryptsContext';
 import { SubscryptsProviderProps, WalletState } from '../types';
-import { WalletService } from '../services';
+import { WalletService, CacheManager } from '../services';
 import {
   getNetworkConfig,
   getSubscryptsContractAddress,
@@ -62,7 +62,8 @@ export function SubscryptsProvider({
   onAccountChange,
   onChainChange,
   connectors: connectorsProp,
-  persistSession: persistSessionProp = true
+  persistSession: persistSessionProp = true,
+  caching
 }: SubscryptsProviderProps) {
   const network = getNetworkConfig(networkName);
 
@@ -133,6 +134,16 @@ export function SubscryptsProvider({
 
   // Track whether session reconnect has been attempted
   const sessionReconnectAttempted = useRef(false);
+
+  // Cache manager for query results (namespaced by chain ID)
+  const cacheManager = useMemo(
+    () => new CacheManager(network.chainId, {
+      enabled: caching?.enabled ?? true,
+      defaultTTL: caching?.defaultTTL ?? 60_000,
+      maxEntries: caching?.maxEntries ?? 500,
+    }),
+    [network.chainId, caching?.enabled, caching?.defaultTTL, caching?.maxEntries]
+  );
 
   /**
    * Initialize contracts when signer or provider changes
@@ -576,6 +587,7 @@ export function SubscryptsProvider({
       subsBalance,
       usdcBalance,
       refreshBalances,
+      cacheManager,
       connectors: resolvedConnectors,
       activeConnector,
       connectWith,
@@ -593,6 +605,7 @@ export function SubscryptsProvider({
       subsBalance,
       usdcBalance,
       refreshBalances,
+      cacheManager,
       resolvedConnectors,
       activeConnector,
       connectWith,

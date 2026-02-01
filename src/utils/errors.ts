@@ -84,3 +84,22 @@ export class ValidationError extends SubscryptsError {
     this.name = 'ValidationError';
   }
 }
+
+/**
+ * Sanctions errors - thrown when address is sanctioned
+ */
+export class SanctionsError extends SubscryptsError {
+  public readonly address: string;
+  public readonly isMerchant: boolean;
+
+  constructor(address: string, isMerchant: boolean, details?: Record<string, unknown>) {
+    super(
+      'SANCTIONS_ERROR',
+      `Address ${address} is sanctioned and cannot ${isMerchant ? 'receive payments' : 'create subscriptions'}`,
+      details
+    );
+    this.name = 'SanctionsError';
+    this.address = address;
+    this.isMerchant = isMerchant;
+  }
+}

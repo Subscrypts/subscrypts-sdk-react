@@ -91,7 +91,7 @@ export function useMySubscriptions(
   pageSize: number = 10,
   planIds?: string[]
 ): UseMySubscriptionsReturn {
-  const { provider, wallet } = useSubscrypts();
+  const { provider, wallet, cacheManager } = useSubscrypts();
 
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [total, setTotal] = useState<number>(0);
@@ -112,7 +112,7 @@ export function useMySubscriptions(
       return;
     }
 
-    if (!provider) {
+    if (!provider || !cacheManager) {
       setError(new Error('Provider not initialized'));
       setIsLoading(false);
       return;
@@ -122,13 +122,19 @@ export function useMySubscriptions(
     setError(null);
 
     try {
-      // PRIMARY METHOD: Try getSubscriptionsByAddress first (most efficient - 1 RPC call)
-      // Fetch up to 100 subscriptions (handles most use cases)
-      const result = await getSubscriptionsByAddress(provider, targetAddress, 0n, 100n);
-      const [subs] = result;
+      const cacheKey = `my-subscriptions:${targetAddress}`;
 
-      // Transform contract subscriptions to SDK Subscription type
-      let allSubs = (subs as ContractSubscription[]).map(transformContractSubscription);
+      // PRIMARY METHOD: Try getSubscriptionsByAddress first (most efficient - 1 RPC call)
+      // Fetch up to 100 subscriptions with 2-minute cache
+      let allSubs = await cacheManager.get(
+        cacheKey,
+        async () => {
+          const result = await getSubscriptionsByAddress(provider, targetAddress, 0n, 100n);
+          const [subs] = result;
+          return (subs as ContractSubscription[]).map(transformContractSubscription);
+        },
+        120_000 // 2-minute TTL
+      );
 
       // FALLBACK: If getSubscriptionsByAddress returns empty but we have planIds to check
       // This handles the case where contract's subscriberSubscriptions mapping isn't populated
@@ -174,7 +180,7 @@ export function useMySubscriptions(
       setSubscriptions([]);
       setTotal(0);
     }
-  }, [provider, targetAddress, page, pageSize, planIds]);
+  }, [provider, targetAddress, page, pageSize, planIds, cacheManager]);
 
   /**
    * Fetch on mount and when dependencies change
