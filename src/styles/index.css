@@ -1,6 +1,6 @@
 /**
- * Main stylesheet for @subscrypts/react-sdk
- * Import this in your app: import '@subscrypts/react-sdk/styles';
+ * Main stylesheet for @subscrypts/subscrypts-sdk-react
+ * Import this in your app: import '@subscrypts/subscrypts-sdk-react/styles';
  */
 
 @import './tokens.css';

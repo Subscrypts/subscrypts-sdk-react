@@ -32,7 +32,7 @@ export interface ConnectResult {
  *
  * @example
  * ```typescript
- * import { WalletConnector, ConnectResult } from '@subscrypts/react-sdk';
+ * import { WalletConnector, ConnectResult } from '@subscrypts/subscrypts-sdk-react';
  *
  * class PrivyConnector implements WalletConnector {
  *   readonly id = 'privy';

@@ -41,10 +41,10 @@ All notable changes to this project will be documented in this file.
 - Enhanced logger interface: `PerformanceMetric` type exported
 
 **New Exports**:
-- `SanctionsError` class from `@subscrypts/react-sdk/utils/errors`
-- `CacheManager`, `CacheConfig`, `CacheStats` from `@subscrypts/react-sdk/services`
-- `checkSanctions` validator from `@subscrypts/react-sdk/utils/validators`
-- `PerformanceMetric` interface from `@subscrypts/react-sdk/utils/logger`
+- `SanctionsError` class from `@subscrypts/subscrypts-sdk-react/utils/errors`
+- `CacheManager`, `CacheConfig`, `CacheStats` from `@subscrypts/subscrypts-sdk-react/services`
+- `checkSanctions` validator from `@subscrypts/subscrypts-sdk-react/utils/validators`
+- `PerformanceMetric` interface from `@subscrypts/subscrypts-sdk-react/utils/logger`
 
 ### Performance
 

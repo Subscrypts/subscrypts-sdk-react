@@ -1,5 +1,5 @@
 /**
- * Type definitions for @subscrypts/react-sdk
+ * Type definitions for @subscrypts/subscrypts-sdk-react
  */
 
 // Contract types

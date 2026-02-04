@@ -1,5 +1,5 @@
 /**
- * Hooks API for @subscrypts/react-sdk
+ * Hooks API for @subscrypts/subscrypts-sdk-react
  */
 
 // Re-export context hook

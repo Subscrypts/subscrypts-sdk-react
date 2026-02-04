@@ -1,5 +1,5 @@
 /**
- * Component exports for @subscrypts/react-sdk
+ * Component exports for @subscrypts/subscrypts-sdk-react
  */
 
 // Guards

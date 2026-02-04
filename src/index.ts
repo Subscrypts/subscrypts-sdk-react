@@ -1,12 +1,12 @@
 /**
- * @subscrypts/react-sdk
+ * @subscrypts/subscrypts-sdk-react
  *
  * Official React SDK for Subscrypts - Decentralized subscriptions on Arbitrum
  *
  * @example
  * ```tsx
- * import { SubscryptsProvider, SubscriptionGuard } from '@subscrypts/react-sdk';
- * import '@subscrypts/react-sdk/styles';
+ * import { SubscryptsProvider, SubscriptionGuard } from '@subscrypts/subscrypts-sdk-react';
+ * import '@subscrypts/subscrypts-sdk-react/styles';
  *
  * function App() {
  *   return (

@@ -1,5 +1,5 @@
 /**
- * Utility functions for @subscrypts/react-sdk
+ * Utility functions for @subscrypts/subscrypts-sdk-react
  */
 
 export * from './errors';

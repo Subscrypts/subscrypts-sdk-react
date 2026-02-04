@@ -1,4 +1,4 @@
-# @subscrypts/react-sdk
+# @subscrypts/subscrypts-sdk-react
 
 <div align="center">
 
@@ -6,7 +6,7 @@
 
 Decentralized subscription payments on Arbitrum - Built for developers of all skill levels
 
-[![npm version](https://img.shields.io/npm/v/@subscrypts/react-sdk.svg)](https://www.npmjs.com/package/@subscrypts/react-sdk)
+[![npm version](https://img.shields.io/npm/v/@subscrypts/subscrypts-sdk-react.svg)](https://www.npmjs.com/package/@subscrypts/subscrypts-sdk-react)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 
@@ -129,7 +129,7 @@ npm install
 ### Step 1: Install the SDK
 
 ```bash
-npm install @subscrypts/react-sdk ethers
+npm install @subscrypts/subscrypts-sdk-react ethers
 ```
 
 **Why ethers?** It's the library we use to interact with the blockchain. Don't worry - you won't need to use it directly!
@@ -149,8 +149,8 @@ First, wrap your app with the `SubscryptsProvider`. This gives all components ac
 **src/App.tsx** or **src/App.jsx**
 
 ```tsx
-import { SubscryptsProvider } from '@subscrypts/react-sdk';
-import '@subscrypts/react-sdk/styles'; // Import default styles
+import { SubscryptsProvider } from '@subscrypts/subscrypts-sdk-react';
+import '@subscrypts/subscrypts-sdk-react/styles'; // Import default styles
 
 function App() {
   return (
@@ -178,7 +178,7 @@ export default App;
 Use `SubscriptionGuard` to protect any content. Only users with active subscriptions can see what's inside.
 
 ```tsx
-import { SubscriptionGuard } from '@subscrypts/react-sdk';
+import { SubscriptionGuard } from '@subscrypts/subscrypts-sdk-react';
 
 function MyApp() {
   return (
@@ -225,7 +225,7 @@ Examples:
 Let users subscribe with a single button click! The checkout flow is handled automatically.
 
 ```tsx
-import { SubscryptsButton } from '@subscrypts/react-sdk';
+import { SubscryptsButton } from '@subscrypts/subscrypts-sdk-react';
 
 function SubscribePage() {
   const handleSuccess = (subscriptionId) => {
@@ -339,7 +339,7 @@ Use when you already have wallet management (Wagmi, RainbowKit, etc.)
 
 **Connector Mode** (Custom Providers):
 ```tsx
-import { InjectedConnector } from '@subscrypts/react-sdk';
+import { InjectedConnector } from '@subscrypts/subscrypts-sdk-react';
 
 <SubscryptsProvider connectors={[new InjectedConnector(), myPrivyConnector]}>
 ```
@@ -354,7 +354,7 @@ Pluggable architecture - implement the `WalletConnector` interface for any provi
 Protect a single page or component:
 
 ```tsx
-import { SubscriptionGuard, SubscryptsButton } from '@subscrypts/react-sdk';
+import { SubscriptionGuard, SubscryptsButton } from '@subscrypts/subscrypts-sdk-react';
 
 function PremiumArticle() {
   return (
@@ -399,7 +399,7 @@ function PremiumArticle() {
 Show users their current subscription status:
 
 ```tsx
-import { useSubscriptionStatus } from '@subscrypts/react-sdk';
+import { useSubscriptionStatus } from '@subscrypts/subscrypts-sdk-react';
 
 function SubscriptionBadge() {
   const { status, isLoading } = useSubscriptionStatus('1');
@@ -439,7 +439,7 @@ Build your own checkout UI using hooks:
 
 ```tsx
 import { useState } from 'react';
-import { useSubscribe, useWallet, useTokenBalance } from '@subscrypts/react-sdk';
+import { useSubscribe, useWallet, useTokenBalance } from '@subscrypts/subscrypts-sdk-react';
 
 function CustomCheckout({ planId }) {
   const [cycles, setCycles] = useState(12);
@@ -539,7 +539,7 @@ function CustomCheckout({ planId }) {
 Offer multiple subscription tiers:
 
 ```tsx
-import { SubscryptsButton } from '@subscrypts/react-sdk';
+import { SubscryptsButton } from '@subscrypts/subscrypts-sdk-react';
 
 function PricingPage() {
   const plans = [
@@ -785,7 +785,7 @@ const [isOpen, setIsOpen] = useState(false);
 **Human-readable error messages** for blockchain errors with retry support.
 
 ```tsx
-import { ErrorDisplay } from '@subscrypts/react-sdk';
+import { ErrorDisplay } from '@subscrypts/subscrypts-sdk-react';
 
 <ErrorDisplay
   error={transactionError}
@@ -814,7 +814,7 @@ import { ErrorDisplay } from '@subscrypts/react-sdk';
 **Prompt users to switch** to Arbitrum One when on the wrong network.
 
 ```tsx
-import { NetworkSwitchPrompt } from '@subscrypts/react-sdk';
+import { NetworkSwitchPrompt } from '@subscrypts/subscrypts-sdk-react';
 
 <NetworkSwitchPrompt
   currentChainId={chainId}
@@ -838,7 +838,7 @@ import { NetworkSwitchPrompt } from '@subscrypts/react-sdk';
 **Catch and display React errors** with reset capability.
 
 ```tsx
-import { SubscryptsErrorBoundary } from '@subscrypts/react-sdk';
+import { SubscryptsErrorBoundary } from '@subscrypts/subscrypts-sdk-react';
 
 <SubscryptsErrorBoundary
   onError={(error) => logToService(error)}
@@ -868,7 +868,7 @@ import { SubscryptsErrorBoundary } from '@subscrypts/react-sdk';
 **Wallet selection modal** that lists available connectors.
 
 ```tsx
-import { ConnectWalletModal } from '@subscrypts/react-sdk';
+import { ConnectWalletModal } from '@subscrypts/subscrypts-sdk-react';
 
 <ConnectWalletModal
   isOpen={showWalletModal}
@@ -895,7 +895,7 @@ import { ConnectWalletModal } from '@subscrypts/react-sdk';
 **Manage an existing subscription** with cancel, auto-renewal toggle, and cycle updates.
 
 ```tsx
-import { ManageSubscriptionModal } from '@subscrypts/react-sdk';
+import { ManageSubscriptionModal } from '@subscrypts/subscrypts-sdk-react';
 
 <ManageSubscriptionModal
   isOpen={showManage}
@@ -925,7 +925,7 @@ import { ManageSubscriptionModal } from '@subscrypts/react-sdk';
 **Reusable confirmation dialog** for destructive or important actions.
 
 ```tsx
-import { ConfirmDialog } from '@subscrypts/react-sdk';
+import { ConfirmDialog } from '@subscrypts/subscrypts-sdk-react';
 
 <ConfirmDialog
   isOpen={showConfirm}
@@ -958,7 +958,7 @@ import { ConfirmDialog } from '@subscrypts/react-sdk';
 **Display subscription details** with status badge and manage button.
 
 ```tsx
-import { SubscriptionCard } from '@subscrypts/react-sdk';
+import { SubscriptionCard } from '@subscrypts/subscrypts-sdk-react';
 
 <SubscriptionCard
   subscription={subscription}
@@ -986,7 +986,7 @@ import { SubscriptionCard } from '@subscrypts/react-sdk';
 **Complete subscription management dashboard** with pagination.
 
 ```tsx
-import { SubscriptionDashboard } from '@subscrypts/react-sdk';
+import { SubscriptionDashboard } from '@subscrypts/subscrypts-sdk-react';
 
 <SubscriptionDashboard
   pageSize={10}
@@ -1015,7 +1015,7 @@ import { SubscriptionDashboard } from '@subscrypts/react-sdk';
 **Complete merchant dashboard** with revenue, plans, and subscribers.
 
 ```tsx
-import { MerchantDashboard } from '@subscrypts/react-sdk';
+import { MerchantDashboard } from '@subscrypts/subscrypts-sdk-react';
 
 <MerchantDashboard />
 ```
@@ -1668,7 +1668,7 @@ interface SubscriptionHealth {
 If you already have wallet management with Wagmi:
 
 ```tsx
-import { SubscryptsProvider } from '@subscrypts/react-sdk';
+import { SubscryptsProvider } from '@subscrypts/subscrypts-sdk-react';
 import { useWalletClient } from 'wagmi';
 
 function App() {
@@ -1728,7 +1728,7 @@ useEffect(() => {
 **Option 1: Use `getErrorMessage` for user-friendly error strings:**
 
 ```tsx
-import { getErrorMessage } from '@subscrypts/react-sdk';
+import { getErrorMessage } from '@subscrypts/subscrypts-sdk-react';
 
 try {
   await subscribe({ /* ... */ });
@@ -1744,7 +1744,7 @@ try {
 **Option 2: Use `ErrorDisplay` component for automatic error rendering:**
 
 ```tsx
-import { ErrorDisplay } from '@subscrypts/react-sdk';
+import { ErrorDisplay } from '@subscrypts/subscrypts-sdk-react';
 
 <ErrorDisplay error={txError} onRetry={retryTransaction} />
 ```
@@ -1756,7 +1756,7 @@ import {
   InsufficientBalanceError,
   NetworkError,
   TransactionError
-} from '@subscrypts/react-sdk';
+} from '@subscrypts/subscrypts-sdk-react';
 
 try {
   await subscribe({ /* ... */ });
@@ -1776,7 +1776,7 @@ try {
 A pure function for normalizing subscription states. Works in React components, Node.js scripts, AI agents, and anywhere else:
 
 ```tsx
-import { resolveSubscriptionStatus } from '@subscrypts/react-sdk';
+import { resolveSubscriptionStatus } from '@subscrypts/subscrypts-sdk-react';
 
 const status = resolveSubscriptionStatus({ subscription });
 
@@ -1801,7 +1801,7 @@ import {
   isPaymentDue,
   shouldRenew,
   getSubscriptionHealth
-} from '@subscrypts/react-sdk';
+} from '@subscrypts/subscrypts-sdk-react';
 
 // Check if subscription grants access
 if (canAccess(subscription)) {
@@ -1836,7 +1836,7 @@ console.log(health.cyclesRemaining); // 11
 Import the pre-built stylesheet:
 
 ```tsx
-import '@subscrypts/react-sdk/styles';
+import '@subscrypts/subscrypts-sdk-react/styles';
 ```
 
 This includes styles for all components with the `subscrypts-` prefix to avoid conflicts.
@@ -1900,7 +1900,7 @@ Target specific component classes:
 Use hooks to build completely custom UIs:
 
 ```tsx
-import { useSubscriptionStatus, useSubscribe } from '@subscrypts/react-sdk';
+import { useSubscriptionStatus, useSubscribe } from '@subscrypts/subscrypts-sdk-react';
 
 function MyCustomSubscriptionUI() {
   const { status } = useSubscriptionStatus('merchant', 'plan');
@@ -1960,7 +1960,7 @@ if (status.isActive) return <div>Active!</div>;
 **Solution:** Import the stylesheet:
 
 ```tsx
-import '@subscrypts/react-sdk/styles';
+import '@subscrypts/subscrypts-sdk-react/styles';
 ```
 
 ---
@@ -2039,7 +2039,7 @@ For Next.js, make sure to mark components as client-side:
 ```tsx
 'use client'; // Add this at the top
 
-import { SubscryptsButton } from '@subscrypts/react-sdk';
+import { SubscryptsButton } from '@subscrypts/subscrypts-sdk-react';
 ```
 
 ---
@@ -2109,7 +2109,7 @@ import { SubscryptsButton } from '@subscrypts/react-sdk';
 
 ### Issues & Bug Reports
 
-Found a bug? [Open an issue on GitHub](https://github.com/subscrypts/react-sdk/issues)
+Found a bug? [Open an issue on GitHub](https://github.com/Subscrypts/subscrypts-sdk-react/issues)
 
 ---
 

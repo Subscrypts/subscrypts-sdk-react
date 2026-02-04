@@ -1,5 +1,5 @@
 /**
- * Constants for @subscrypts/react-sdk
+ * Constants for @subscrypts/subscrypts-sdk-react
  *
  * Re-exports from centralized src/contract/ directory
  */

@@ -1,9 +1,9 @@
 /**
- * Styles entry point for @subscrypts/react-sdk
+ * Styles entry point for @subscrypts/subscrypts-sdk-react
  *
  * Import this in your app:
  * ```tsx
- * import '@subscrypts/react-sdk/styles';
+ * import '@subscrypts/subscrypts-sdk-react/styles';
  * ```
  */
 
